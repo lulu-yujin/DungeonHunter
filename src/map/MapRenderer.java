@@ -81,9 +81,9 @@ public class MapRenderer {
         spawnSprite    = loadImage("/images/map/spawn.png");
         exitSprite     = loadImage("/images/map/exit.png");
         portalSprite   = loadImage("/images/map/portal.png");   // 新增 / new
-        beginnerSprite = loadImage("/images/map/beginner.png");
-        advancedSprite = loadImage("/images/map/advanced.png");
-        bossSprite     = loadImage("/images/map/boss.png");
+        beginnerSprite = loadImage("/images/map/floor.png");
+        advancedSprite = loadImage("/images/map/floor.png");
+        bossSprite     = loadImage("/images/map/floor.png");
     }
 
     /**
