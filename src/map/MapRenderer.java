@@ -78,12 +78,12 @@ public class MapRenderer {
     private void loadSprites() {
         floorSprite    = loadImage("/map/floor.png");
         wallSprite     = loadImage("/map/wall.png");
-        spawnSprite    = loadImage("/images/map/spawn.png");
-        exitSprite     = loadImage("/images/map/exit.png");
-        portalSprite   = loadImage("/images/map/portal.png");   // 新增 / new
-        beginnerSprite = loadImage("/images/map/floor.png");
-        advancedSprite = loadImage("/images/map/floor.png");
-        bossSprite     = loadImage("/images/map/floor.png");
+        spawnSprite    = loadImage("/map/spawn.png");
+        exitSprite     = loadImage("/map/exit.png");
+        portalSprite   = loadImage("/map/portal.png");   //通道
+        beginnerSprite = loadImage("/map/floor.png");
+        advancedSprite = loadImage("/map/floor.png");
+        bossSprite     = loadImage("/map/floor.png");
     }
 
     /**
