@@ -14,11 +14,14 @@ public class Main {
 		window.setTitle("Dungeon Hunter");
 		
 		GamePanel gamePanel = new GamePanel();
+		window.add(gamePanel);
 		
 		window.pack();
 		
 		window.setLocationRelativeTo(null);
-		window.setVisible(True);
+		window.setVisible(true);
+		
+		gamePanel.startGameThread();
 		
 	}
 

@@ -76,8 +76,8 @@ public class MapRenderer {
     // ─────────────────────────────────────────────────────────────────────
 
     private void loadSprites() {
-        floorSprite    = loadImage("/images/map/floor.png");
-        wallSprite     = loadImage("/images/map/wall.png");
+        floorSprite    = loadImage("/map/floor.png");
+        wallSprite     = loadImage("/map/wall.png");
         spawnSprite    = loadImage("/images/map/spawn.png");
         exitSprite     = loadImage("/images/map/exit.png");
         portalSprite   = loadImage("/images/map/portal.png");   // 新增 / new
