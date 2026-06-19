@@ -27,10 +27,10 @@ public class MapTest extends Application {
         // 1. 创建地图数据 / Create map data
         MazeMap mazeMap = new MazeMap();
 
-        // 2. 创建 Canvas，尺寸 = 列数×32 × 行数×32 = 640×480
-        //    Create Canvas sized COLS*32 × ROWS*32 = 640×480
-        int width  = MazeMap.COLS * Tile.TILE_SIZE; // 20 * 32 = 640
-        int height = MazeMap.ROWS * Tile.TILE_SIZE; // 15 * 32 = 480
+        // 2. 创建 Canvas，尺寸 = 列数×48 × 行数×32 = 640×480
+        //    Create Canvas sized COLS*48 × ROWS*32 = 640×480
+        int width  = MazeMap.COLS * Tile.TILE_SIZE; // 20 * 48 = 640
+        int height = MazeMap.ROWS * Tile.TILE_SIZE; // 15 * 48 = 480
         Canvas canvas = new Canvas(width, height);
 
         // 3. 创建渲染器并渲染一次 / Create renderer and render once

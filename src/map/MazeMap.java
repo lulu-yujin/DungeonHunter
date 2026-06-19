@@ -21,8 +21,8 @@ package map;
 public class MazeMap {
 
     // ── 地图规格 / Map dimensions ──────────────────────────────────────────
-    public static final int ROWS = 24;
-    public static final int COLS = 32;
+    public static final int ROWS = 15;
+    public static final int COLS = 20;
 
     // ── 字符常量 / Tile character constants ───────────────────────────────
     public static final char WALL     = '#';
@@ -71,35 +71,27 @@ public class MazeMap {
     // Simple terrain, few short walls, portal T on right side
     // ─────────────────────────────────────────────────────────────────────
 
-    private void loadMap1() {
+    public void loadMap1() {
         String[] layout = {
-            "################################",
-            "#S..#...B........B....B...BBBB.#",
-            "#...#...B........B....B...BBBB.#",
-            "#...#########....B....B...BBBB.#",
-            "#.......#..BB....B....B........#",
-            "#..BB...#........B.............#",
-            "#..BB...#..BB....B....######...#",
-            "#.......#..BB....B....#B.......#",
-            "#.......#..BB..########........#",
-            "#.B..B..#.........#...B.B......#",
-            "#.B..B..######....#...B.B......#",
-            "#...........BB....#...B.B......#",
-            "#......B#...BB........B.B......T",
-            "#......B#......B......B.B......#",
-            "#.......#.......B....######....#",
-            "#.###...#......B.....#.....BB..#",
-            "#.###...#......B.....#.....BB..#",
-            "#.......##############.........#",
-            "#...B....B........BB...........#",
-            "#...B....B.......BB............#",
-            "#........B.......B....B...BB...#",
-            "#........B.......B....B...BB...#",
-            "#.................B....B.......#",
-            "################################"
+            "####################",
+            "#S.......B.........#",
+            "#..###.......BBB...#",
+            "#..#.#.......#######",
+            "#..#.#..BBB..#.....#",
+            "#..#.........#.....#",
+            "#..######..........#",
+            "#.............BB...#",
+            "#....BBB...........#",
+            "#....BBB.######....#",
+            "#........#.........#",
+            "#..BBB...#......B..#",
+            "#........#......B..T",
+            "#..................#",
+            "####################"
         };
         fillLevel(0, layout);
     }
+
 
 
     // ─────────────────────────────────────────────────────────────────────
@@ -109,35 +101,29 @@ public class MazeMap {
     // Complex terrain: T-walls, L-corners, long vertical walls
     // ─────────────────────────────────────────────────────────────────────
 
-    private void loadMap2() {
+
+    public void loadMap2() {
         String[] layout = {
-            "################################",
-            "#....A....A........A...AAAA....#",
-            "#......######A......A...AAAA...#",
-            "#......#....AA......A..........#",
-            "#.AAAA.#....AA......AAA........#",
-            "#.AAAA.#....A........AAA.......T",
-            "#.AAAA.######........A.........#",
-            "#......A.............A...##....#",
-            "#......A.............A...##....#",
-            "#.####AAA....##................#",
-            "#.#...AAA....##....AAA....###..#",
-            "#.#......A...........AAA..#..#.#",
-            "#.#......A...........AAA..#..#.#",
-            "#........A...##......A....#..#.#",
-            "T........A...##......A.......#.#",
-            "#.....###.....AAA............#.#",
-            "#.....###.....AAA............#.#",
-            "#..............A...####........#",
-            "#..A...........A...#A#.........#",
-            "#..A.....AAAA..................#",
-            "#..A.....AAAA..........AAA.....#",
-            "#........................AAA...#",
-            "#........................AAA...#",
-            "################################"
+            "####################",
+            "T....AA............#",
+            "#....AA....#####...#",
+            "#...............#..#",
+            "#..AAA......AA..#..#",
+            "#...........AA..#..#",
+            "#..######..#####...#",
+            "#..#...............#",
+            "#..#...AAAA........#",
+            "#..#...AAAA.########",
+            "#..#...............#",
+            "#..######..AAA.....#",
+            "#..........AAA.....T",
+            "#..................#",
+            "####################"
         };
         fillLevel(1, layout);
     }
+
+
 
 
     // ─────────────────────────────────────────────────────────────────────
@@ -147,35 +133,27 @@ public class MazeMap {
     // Open arena, sparse obstacles, exit E bottom-right
     // ─────────────────────────────────────────────────────────────────────
 
-    private void loadMap3() {
+    public void loadMap3() {
         String[] layout = {
-            "################################",
-            "#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX#",
-            "#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX#",
-            "#XXXXXXXXXXXXXXX#######XXXXXXXX#",
-            "#XXXXX####XXXXXXXXXXXX#XXXXXXXX#",
-            "#XXXXXXXXXXXXXXXXXXXXX#XXXXXXXX#",
-            "#XXXXX#XXXXXXXXXXXXXXX#XXXXXXXX#",
-            "TXXXXX#XXXXXXX##XXXXXX#XXXXXXXX#",
-            "#XXXXX#XXXXXXXXXXXXXXXXXXXXXXXX#",
-            "#XXXXX#XXXXXXXXXXXXXXXXXXXXXXXX#",
-            "#XXXXX#XXXX#####XXXXXXXXXXXXXXX#",
-            "#XXXXX#XXXXXXXX#XXXXXXXXXXXXXXX#",
-            "#XXXXXXXXXXXXXX#XXXXXXXXXXXXXXX#",
-            "#XXXXXXXXXXXXXX#XXXXXX#XXXXXXXX#",
-            "#XXXXXXXXXXXXXX#XXXXXXXXXXXXXXX#",
-            "#XXXXXXXXXXXXXX########XXXXXXXX#",
-            "#XXXXXXXXXX##XXXXXXXXXXXXXXXXXX#",
-            "#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX#",
-            "#XXXXXXXXXXXXXXXXXXXXXXXX###XXX#",
-            "######XXXXXXXXX##XXXXXXXX#XXXXX#",
-            "#XXXXXXXXXXXXXX####XXXXXX#XXXXX#",
-            "#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX#",
-            "#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX#",
-            "###############################E"
+            "####################",
+            "#XXXXXXXXXXXXXXXXXX#",
+            "#XXXXXXX###XXXXXXXX#",
+            "#XXXXXXX###XXXXXXXX#",
+            "#XXXXXXXXXXXXXXXXXX#",
+            "#XXXXX########XXXXX#",
+            "TXXXXX########XXXXX#",
+            "#XXXXXXXXXXXXXXXXXX#",
+            "#XXXX###XXXXXXXXXXX#",
+            "#XXXX###XXXXXX######",
+            "#XXXX###XXXXXX######",
+            "#XXXXX####XXXXXXXXX#",
+            "#XXXXX####XXX#XXXXX#",
+            "#XXXXXXXXXXXX#XXXXE#",
+            "####################"
         };
         fillLevel(2, layout);
     }
+
 
     // ─────────────────────────────────────────────────────────────────────
     // fillLevel() — 把 String[] 写入 allMaps[levelIndex]

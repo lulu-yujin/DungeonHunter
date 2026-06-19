@@ -11,8 +11,8 @@ package map;
 public class Tile {
 
     // ── 统一格子尺寸 / Unified tile size ──────────────────────────────────
-    /** 1 格 = 32×32 像素 / 1 cell = 32×32 px */
-    public static final int TILE_SIZE = 32;
+    /** 1 格 = 32×32 像素 / 1 cell = 48x48 px */
+    public static final int TILE_SIZE = 48;
 
     // ── 格子位置（格子坐标）/ Tile position (grid coords) ─────────────────
     protected int row;
