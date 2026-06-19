@@ -1,7 +1,6 @@
 package map;
 
 /**
- * Tile — 地图中每一个格子的基类
  * Tile — Base class for every cell in the maze map.
  *
  * 按照技术规范，所有坐标使用 row / col（格子坐标），
