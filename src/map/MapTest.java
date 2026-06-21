@@ -35,9 +35,9 @@ public class MapTest extends Application {
 
         // 3. 创建渲染器并渲染一次 / Create renderer and render once
         MapRenderer renderer = new MapRenderer(mazeMap, canvas);
+        mazeMap.loadLevel(3); // 切到第二层再渲染
         renderer.render();
-        mazeMap.loadLevel(1); // 切到第二层再渲染
-        renderer.render();
+        
         // 4. 构建场景并显示 / Build scene and show
         StackPane root = new StackPane(canvas);
         Scene scene = new Scene(root, width, height);
