@@ -18,8 +18,8 @@ import map.MazeMap;
 
 public class Main extends Application {
 	
-	private static final int GAME_WIDTH = 1024;
-    private static final int GAME_HEIGHT =768;
+	private static final int GAME_WIDTH = 960;
+    private static final int GAME_HEIGHT =720;
     
     private StackPane root;
     private Stage primaryStage;
