@@ -24,6 +24,7 @@ public class GameManager {
 
             if (!collisionManager.checkPlayerCollision(newRow, newCol)) {
                 player.move(dir);
+                checkPortalAfterMove();
             } else {
                 player.face(dir);
             }
@@ -37,6 +38,7 @@ public class GameManager {
 
             if (!collisionManager.checkPlayerCollision(newRow, newCol)) {
                 player.move(dir);
+                checkPortalAfterMove();
             } else {
                 player.face(dir);
             }
@@ -50,6 +52,7 @@ public class GameManager {
 
             if (!collisionManager.checkPlayerCollision(newRow, newCol)) {
                 player.move(dir);
+                checkPortalAfterMove();
             } else {
                 player.face(dir);
             }
@@ -63,6 +66,7 @@ public class GameManager {
 
             if (!collisionManager.checkPlayerCollision(newRow, newCol)) {
                 player.move(dir);
+                checkPortalAfterMove();
             } else {
                 player.face(dir);
             }
@@ -85,6 +89,22 @@ public class GameManager {
         else if (event.getCode() == KeyCode.ESCAPE) {
             System.out.println("Pause game");
         }
+    }
+    
+    private void checkPortalAfterMove() {
+        // Later connect with map system.
+        // If current tile is portal 'T', check whether player has key.
+        // Example:
+        //
+        // if (mazeMap.isPortal(player.getRow(), player.getCol())) {
+        //     if (player.hasKey()) {
+        //         mazeMap.nextLevel();
+        //         int[] spawn = mazeMap.getSpawnPoint();
+        //         player.resetToSpawn(spawn[0], spawn[1]);
+        //     } else {
+        //         System.out.println("You need a key to enter the next map.");
+        //     }
+        // }
     }
 
     public Player getPlayer() {

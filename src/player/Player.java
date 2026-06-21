@@ -42,6 +42,7 @@ public class Player {
 
     private String weaponName;
     private Direction direction;
+    private boolean hasKey;
 
     // Player image path placeholders
     // The actual image files can be placed in res/player
@@ -65,6 +66,7 @@ public class Player {
         this.coins = 0;
         this.damage = 10;
         this.kills = 0;
+        this.hasKey = false;
 
         this.weaponName = "Wooden Sword";
         this.direction = Direction.DOWN;
@@ -258,7 +260,19 @@ public class Player {
     public void addKill() {
         kills++;
     }
+    
+    public boolean hasKey() {
+        return hasKey;
+    }
 
+    public void pickUpKey() {
+        hasKey = true;
+    }
+
+    public void removeKey() {
+        hasKey = false;
+    }
+    
     public PlayerAction checkCurrentTile(char tile) {
         if (tile == 'T') {
             return PlayerAction.NEXT_LEVEL;
@@ -275,6 +289,7 @@ public class Player {
         setPosition(row, col);
         this.direction = Direction.DOWN;
         this.moving = false;
+        this.hasKey = false;
     }
 
     public void resetForNewGame(int row, int col) {
@@ -290,5 +305,6 @@ public class Player {
         this.weaponName = "Wooden Sword";
         this.direction = Direction.DOWN;
         this.moving = false;
+        this.hasKey = false;
     }
 }
