@@ -38,6 +38,13 @@ public class Main extends Application {
         // 创建场景
         Scene scene = new Scene(root, GAME_WIDTH, GAME_HEIGHT);
         
+        Player player = new Player(1, 1);
+        CollisionManager collisionManager = new CollisionManager();
+        GameManager gameManager = new GameManager(player, collisionManager);
+
+        scene.setOnKeyPressed(event -> {
+            gameManager.handleKeyPressed(event);
+        });
         // 设置舞台
         primaryStage.setTitle("Dungeon Hunter");
         primaryStage.setResizable(false);
