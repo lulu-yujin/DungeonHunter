@@ -8,16 +8,24 @@ import javafx.scene.paint.Color;
 
 public class GamePanel extends Pane {
     
-    final int tileSize = 32; // 32*32 tile
-    final int screenCol = 32;
-    final int screenRow = 24;
+    final int tileSize = 48; 
+    final int screenCol = 20;
+    final int screenRow = 15;
     final int screenWidth = tileSize * screenCol; 
     final int screenHeight = tileSize * screenRow; 
     
     private Canvas canvas;
     private GraphicsContext gc;
+    
+    //UI部分
+    private GameHUD hud;
+    private PauseMenu pauseMenu;
+    private GameOverUI gameOverUI;
+    
     private AnimationTimer gameLoop;
     private boolean running = false;
+    
+
     
     public GamePanel() {
         // 创建画布
@@ -35,6 +43,85 @@ public class GamePanel extends Pane {
         
         // 确保可以获得焦点（用于键盘事件）
         setFocusTraversable(true);
+        
+        createHUD();
+        createPauseMenu();
+        createGameOverUI();
+    }
+    
+    //创建HUD
+    private void createHUD() {
+
+        hud = new GameHUD();
+
+        hud.setLayoutX(10);
+        hud.setLayoutY(10);
+
+        getChildren().add(hud);
+    }
+    
+    //创建暂停菜单
+    private void createPauseMenu() {
+
+        pauseMenu = new PauseMenu();
+
+        pauseMenu.setPrefSize(
+                screenWidth,
+                screenHeight
+        );
+
+        pauseMenu.setVisible(false);
+
+        getChildren().add(pauseMenu);
+    }
+    
+    //创建结束界面
+    private void createGameOverUI() {
+
+        gameOverUI = new GameOverUI();
+
+        gameOverUI.setPrefSize(
+                screenWidth,
+                screenHeight
+        );
+
+        gameOverUI.setVisible(false);
+
+        getChildren().add(gameOverUI);
+    }
+    
+    public void showPauseMenu() {
+
+        pauseMenu.setVisible(true);
+    }
+    
+    public void hidePauseMenu() {
+
+        pauseMenu.setVisible(false);
+    }
+    
+    public void showWinScreen() {
+
+        gameOverUI.setWin();
+
+        gameOverUI.updateStats(
+                20,
+                500
+        );
+
+        gameOverUI.setVisible(true);
+    }
+    
+    public void showGameOverScreen() {
+
+        gameOverUI.setLose();
+
+        gameOverUI.updateStats(
+                12,
+                300
+        );
+
+        gameOverUI.setVisible(true);
     }
     
     public void startGameThread() {

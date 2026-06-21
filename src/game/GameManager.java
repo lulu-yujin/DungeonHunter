@@ -3,6 +3,7 @@ package game;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import player.Player;
+import game.CollisionManager;
 
 public class GameManager {
 
@@ -22,7 +23,7 @@ public class GameManager {
             int newRow = player.getNextRow(dir);
             int newCol = player.getNextCol(dir);
 
-            if (!collisionManager.checkPlayerCollision(newRow, newCol)) {
+            if (!collisionManager.checkPlayerCollision(player,newRow, newCol)) {
                 player.move(dir);
                 checkPortalAfterMove();
             } else {
@@ -36,7 +37,7 @@ public class GameManager {
             int newRow = player.getNextRow(dir);
             int newCol = player.getNextCol(dir);
 
-            if (!collisionManager.checkPlayerCollision(newRow, newCol)) {
+            if (!collisionManager.checkPlayerCollision(player,newRow, newCol)) {
                 player.move(dir);
                 checkPortalAfterMove();
             } else {
@@ -50,7 +51,7 @@ public class GameManager {
             int newRow = player.getNextRow(dir);
             int newCol = player.getNextCol(dir);
 
-            if (!collisionManager.checkPlayerCollision(newRow, newCol)) {
+            if (!collisionManager.checkPlayerCollision(player,newRow, newCol)) {
                 player.move(dir);
                 checkPortalAfterMove();
             } else {
@@ -64,7 +65,7 @@ public class GameManager {
             int newRow = player.getNextRow(dir);
             int newCol = player.getNextCol(dir);
 
-            if (!collisionManager.checkPlayerCollision(newRow, newCol)) {
+            if (!collisionManager.checkPlayerCollision(player,newRow, newCol)) {
                 player.move(dir);
                 checkPortalAfterMove();
             } else {

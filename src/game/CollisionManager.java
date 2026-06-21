@@ -1,4 +1,4 @@
-package map;
+package game;
 
 import player.Player;
 import enemy.Enemy;

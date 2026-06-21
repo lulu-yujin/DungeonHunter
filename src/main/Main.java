@@ -5,17 +5,29 @@ import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import ui.GamePanel;
-import ui.MenuUI;
+import ui.GameHUD;
+import ui.GameOverUI;
+import ui.InstructionPane;
+import ui.MainGameUI;
+import ui.PauseMenu;
+import ui.StartMenu;
+import player.Player;              // 新增（如果存在）
+import game.CollisionManager;    // 新增（如果存在）
+import game.GameManager; 
+import map.MazeMap;
 
 public class Main extends Application {
 	
 	private static final int GAME_WIDTH = 1024;
     private static final int GAME_HEIGHT =768;
     
-    private GamePanel gamePanel;
-    private MenuUI menuUI;
     private StackPane root;
     private Stage primaryStage;
+    
+    
+    private StartMenu startMenu;
+    private InstructionPane instructionPane;
+    private GamePanel gamePanel;
     
     @Override
     public void start(Stage primaryStage) {
@@ -23,28 +35,41 @@ public class Main extends Application {
         
         // 创建根布局
         root = new StackPane();
-        
-        // 创建菜单
-        menuUI = new MenuUI(
-            this::startGame,      // onStart
-            this::showInstructions, // onInstructions
-            this::exitGame       // onExit
-        );
-        menuUI.setPrefSize(GAME_WIDTH, GAME_HEIGHT);
-        
-        // 默认显示菜单
-        root.getChildren().add(menuUI);
+        startMenu = new StartMenu();
+        root.getChildren().add(startMenu);
         
         // 创建场景
         Scene scene = new Scene(root, GAME_WIDTH, GAME_HEIGHT);
         
         Player player = new Player(1, 1);
-        CollisionManager collisionManager = new CollisionManager();
+        MazeMap mazeMap = new MazeMap();
+        CollisionManager collisionManager = new CollisionManager(mazeMap);
         GameManager gameManager = new GameManager(player, collisionManager);
 
         scene.setOnKeyPressed(event -> {
+
+            if (gamePanel == null) {
+                return;
+            }
+
+            switch(event.getCode()) {
+
+                case ESCAPE:
+                    gamePanel.showPauseMenu();
+                    break;
+
+                case F1:
+                    gamePanel.showWinScreen();
+                    break;
+
+                case F2:
+                    gamePanel.showGameOverScreen();
+                    break;
+            }
+
             gameManager.handleKeyPressed(event);
         });
+        
         // 设置舞台
         primaryStage.setTitle("Dungeon Hunter");
         primaryStage.setResizable(false);
@@ -62,8 +87,6 @@ public class Main extends Application {
     
     // 开始游戏
     private void startGame() {
-        // 移除菜单
-        root.getChildren().remove(menuUI);
         
         // 创建游戏面板（如果已存在则重新创建）
         if (gamePanel != null) {
@@ -108,7 +131,7 @@ public class Main extends Application {
             root.getChildren().remove(gamePanel);
             gamePanel = null;
         }
-        root.getChildren().add(menuUI);
+       
     }
     
     @Override
