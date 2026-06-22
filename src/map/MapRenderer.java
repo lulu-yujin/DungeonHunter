@@ -30,6 +30,7 @@ import javafx.scene.paint.Color;
  *   renderer.render();   // 每帧调用 / call every frame
  */
 public class MapRenderer {
+	public static final int TILE_SIZE = 48;
 
     // ── 依赖 / Dependencies ────────────────────────────────────────────────
     private final MazeMap         mazeMap;
@@ -45,6 +46,7 @@ public class MapRenderer {
     private Image beginnerSprite;  // 初级怪物区 / beginner zone
     private Image advancedSprite;  // 高级怪物区 / advanced zone
     private Image bossSprite;      // Boss 区 / boss zone
+    private Image keySprite ;
 
     // ── 备用颜色（贴图缺失时）/ Fallback colors (when sprites are missing) ──
     private static final Color COLOR_FLOOR    = Color.web("#8B7355"); // 棕色地板     / brown floor
@@ -55,6 +57,7 @@ public class MapRenderer {
     private static final Color COLOR_BEGINNER = Color.web("#5A7A40"); // 橄榄绿初级区 / olive beginner
     private static final Color COLOR_ADVANCED = Color.web("#7A3A2A"); // 深红高级区   / dark-red advanced
     private static final Color COLOR_BOSS     = Color.web("#8A1A1A"); // 暗红Boss区   / crimson boss
+    private static final Color COLOR_KEY     = Color.web("#9B59B6"); // 紫色钥匙区
 
     /**
      * 构造方法 / Constructor
@@ -84,6 +87,8 @@ public class MapRenderer {
         beginnerSprite = loadImage("/map/floor.png");
         advancedSprite = loadImage("/map/floor.png");
         bossSprite     = loadImage("/map/floor.png");
+        keySprite = loadImage("/map/key.png");
+        
     }
 
     /**
@@ -162,6 +167,21 @@ public class MapRenderer {
                         // Boss 区 / Boss zone
                         drawTile(bossSprite, COLOR_BOSS, px, py, ts);
                         break;
+                        
+                    case MazeMap.KEY:
+                        int keySize = 24;
+                        int offset = (TILE_SIZE - keySize) / 2;
+                        // 先绘制地砖底色
+                        drawTile(null, COLOR_KEY, px, py, ts);
+                        // 再居中绘制钥匙图片
+                        gc.drawImage(
+                            keySprite,
+                            px + offset,
+                            py + offset,
+                            keySize,
+                            keySize
+                        );
+                        break;   
 
                     default: // '.' 普通地板 / generic floor
                         drawTile(floorSprite, COLOR_FLOOR, px, py, ts);

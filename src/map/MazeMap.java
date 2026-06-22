@@ -176,12 +176,26 @@ public class MazeMap {
         char[][] map = getMap();
         for (int r = 0; r < ROWS; r++) {
             for (int c = 0; c < COLS; c++) {
-                if (map[r][c] == WALL) {
-                    tiles[r][c] = new Wall(r, c);
-                } else {
-                    tiles[r][c] = new Tile(r, c, true);
-                }
+            	if (map[r][c] == WALL) {
+            	    tiles[r][c] = new Wall(r, c);
+            	} else {
+            	    tiles[r][c] = new Tile(r, c, true);
+            	}
             }
+        }
+    }
+    //拾取钥匙之后改为普通地砖
+    public boolean isKey(int row, int col) {
+        if (row < 0 || row >= ROWS || col < 0 || col >= COLS) {
+            return false;
+        }
+
+        return getChar(row, col) == KEY;
+    }
+
+    public void removeKeyAt(int row, int col) {
+        if (isKey(row, col)) {
+            getMap()[row][col] = FLOOR;
         }
     }
 
