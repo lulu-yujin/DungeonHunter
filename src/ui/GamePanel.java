@@ -8,6 +8,8 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
 import game.GameManager;
 import map.*;
@@ -50,6 +52,10 @@ public class GamePanel extends Pane {
     private ArrayList<Enemy> enemies = new ArrayList<>();
 
     private int enemyMoveCounter = 0;
+    
+    private int attackCooldown = 0;
+    
+    private int playerDamageCooldown = 0;
 
     //------------------------
     // 游戏循环
@@ -248,15 +254,25 @@ public class GamePanel extends Pane {
 
     private void update() {
 
+        if (attackCooldown > 0) {
+            attackCooldown--;
+        }
+
+        if (playerDamageCooldown > 0) {
+            playerDamageCooldown--;
+        }
+
         checkKeyCollection();
 
         checkPortal();
 
         checkExit();
 
-        checkPlayerDeath();
-
         updateEnemies();
+
+        checkEnemyContact();
+
+        checkPlayerDeath();
 
         checkBossDefeated();
     }
@@ -284,10 +300,96 @@ public class GamePanel extends Pane {
             player.move(direction);
         }
     }
+    
+    //攻击系统
+    private void playerAttack() {
+
+        Player player = gameManager.getPlayer();
+
+        if (player == null) {
+            return;
+        }
+
+        if (attackCooldown > 0) {
+            return;
+        }
+
+        attackCooldown = 20;
+
+        for (int i = enemies.size() - 1; i >= 0; i--) {
+
+            Enemy enemy = enemies.get(i);
+
+            if (player.isEnemyInAttackRange(
+                    enemy.getRow(),
+                    enemy.getCol()
+            )) {
+
+                enemy.takeDamage(player.getDamage());
+
+                System.out.println(
+                        "Enemy hit! Damage: "
+                                + player.getDamage()
+                                + " Enemy HP: "
+                                + enemy.getHp()
+                                + "/"
+                                + enemy.getMaxHp()
+                );
+
+                if (enemy.isDead()) {
+
+                    player.addKill();
+
+                    player.addCoins(enemy.getCoinReward());
+
+                    enemies.remove(i);
+
+                    System.out.println(
+                            "Enemy defeated! +"
+                                    + enemy.getCoinReward()
+                                    + " coins"
+                    );
+                }
+
+                return;
+            }
+        }
+    }
 
     //------------------------
     // 怪物
     //------------------------
+    private void checkEnemyContact() {
+
+        Player player = gameManager.getPlayer();
+
+        if (player == null) {
+            return;
+        }
+
+        if (playerDamageCooldown > 0) {
+            return;
+        }
+
+        for (Enemy enemy : enemies) {
+
+            if (enemy.getRow() == player.getRow()
+                    && enemy.getCol() == player.getCol()) {
+
+                player.takeDamage(enemy.getDamage());
+
+                playerDamageCooldown = 45;
+
+                System.out.println(
+                        "Player damaged! -"
+                                + enemy.getDamage()
+                                + " HP"
+                );
+
+                return;
+            }
+        }
+    }
 
     private void updateEnemies() {
 
@@ -409,12 +511,9 @@ public class GamePanel extends Pane {
 
     private void checkBossDefeated() {
 
-        if (mazeMap.isFinalLevel()) {
+        if (mazeMap.isFinalLevel() && enemies.isEmpty()) {
 
-            // TODO
-            // if (bossDead) {
-            //     gameManager.showVictory();
-            // }
+            gameManager.showVictory();
         }
     }
 
@@ -527,14 +626,43 @@ public class GamePanel extends Pane {
 
         for (Enemy enemy : enemies) {
 
+            double x = enemy.getSprite().getX();
+            double y = enemy.getSprite().getY();
+
             gc.drawImage(
                     enemy.getSprite().getImage(),
-                    enemy.getSprite().getX(),
-                    enemy.getSprite().getY(),
+                    x,
+                    y,
                     TILE_SIZE,
                     TILE_SIZE
             );
+
+            drawEnemyHealthBar(enemy, x, y);
         }
+    }
+    
+    private void drawEnemyHealthBar(Enemy enemy, double x, double y) {
+
+        double barWidth = TILE_SIZE - 8;
+        double barHeight = 5;
+
+        double hpRatio = (double) enemy.getHp() / enemy.getMaxHp();
+
+        gc.setFill(Color.BLACK);
+        gc.fillRect(
+                x + 4,
+                y - 8,
+                barWidth,
+                barHeight
+        );
+
+        gc.setFill(Color.RED);
+        gc.fillRect(
+                x + 4,
+                y - 8,
+                barWidth * hpRatio,
+                barHeight
+        );
     }
 
     //------------------------
@@ -559,29 +687,44 @@ public class GamePanel extends Pane {
             return;
         }
 
+        gc.setFill(Color.rgb(0, 0, 0, 0.65));
+        gc.fillRoundRect(10, 10, 430, 95, 15, 15);
+
+        gc.setStroke(Color.GOLD);
+        gc.strokeRoundRect(10, 10, 430, 95, 15, 15);
+
         gc.setFill(Color.WHITE);
 
         gc.fillText(
-                "Keys: "
-                        + player.getKeyCount()
-                        + "/"
-                        + player.getRequiredKeys(),
-                10,
-                20
+                "HP: " + player.getHp() + "/" + player.getMaxHp(),
+                25,
+                35
         );
 
         gc.fillText(
-                "HP: "
-                        + player.getHp(),
-                10,
-                40
+                "Coins: " + player.getCoins(),
+                150,
+                35
         );
 
         gc.fillText(
-                "Coins: "
-                        + player.getCoins(),
-                10,
-                60
+                "Keys: " + player.getKeyCount() + "/" + player.getRequiredKeys(),
+                280,
+                35
+        );
+
+        gc.fillText(
+                "Weapon: " + player.getWeaponName()
+                        + " | Damage: " + player.getDamage(),
+                25,
+                62
+        );
+
+        gc.fillText(
+                "Kills: " + player.getKills()
+                        + " | Enemies: " + enemies.size(),
+                25,
+                88
         );
     }
 
@@ -637,8 +780,7 @@ public class GamePanel extends Pane {
 
                 case SPACE:
 
-                    // TODO
-                    // attack
+                    playerAttack();
 
                     break;
 

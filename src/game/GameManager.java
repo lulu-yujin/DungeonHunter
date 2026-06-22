@@ -32,9 +32,16 @@ public class GameManager {
 
         gameState = GameState.MENU;
 
-        StartMenu menu = new StartMenu();
+        StartMenu menu = new StartMenu(this);
 
         stage.setScene(new Scene(menu, 960, 720));
+    }
+    
+    public void showInstructions() {
+
+        InstructionPane pane = new InstructionPane(this);
+
+        stage.setScene(new Scene(pane, 960, 720));
     }
 
     public void startGame() {

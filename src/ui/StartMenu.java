@@ -1,67 +1,90 @@
 package ui;
 
-import javafx.scene.layout.VBox;
+import game.GameManager;
+import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.scene.paint.Color;
 
 public class StartMenu extends VBox {
-    
-    // 提供公共方法方便外部调整
-    private Label title;
-    private Button startBtn;
-    private Button instructionBtn;
-    private Button exitBtn;
-    
-    public StartMenu() {
+
+    private GameManager gameManager;
+
+    public StartMenu(GameManager gameManager) {
+        this.gameManager = gameManager;
+
         setAlignment(Pos.CENTER);
-        setSpacing(20);
-        setStyle("-fx-background-color: #2c3e50; -fx-padding: 50px;");
-        
-        // 创建标题
-        title = new Label("Dungeon Hunter");
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 48));
-        title.setTextFill(Color.web("#ecf0f1"));
-        
-        // 创建按钮
-        startBtn = createStyledButton("Start Game");
-        instructionBtn = createStyledButton("Instructions");
-        exitBtn = createStyledButton("Exit");
-        
-        getChildren().addAll(title, startBtn, instructionBtn, exitBtn);
+        setSpacing(22);
+        setPadding(new Insets(60));
+
+        setStyle(
+                "-fx-background-color: linear-gradient(to bottom, #141E30, #243B55);"
+        );
+
+        Label title = new Label("DUNGEON HUNTER");
+        title.setFont(Font.font("Georgia", FontWeight.BOLD, 56));
+        title.setTextFill(Color.web("#F5E6A8"));
+        title.setStyle(
+                "-fx-effect: dropshadow(gaussian, black, 8, 0.6, 2, 2);"
+        );
+
+        Label subtitle = new Label("Collect keys. Defeat monsters. Escape the maze.");
+        subtitle.setFont(Font.font("Arial", 18));
+        subtitle.setTextFill(Color.web("#D6D6D6"));
+
+        Button startBtn = createMenuButton("Start Game");
+        Button instructionBtn = createMenuButton("Instructions");
+        Button exitBtn = createMenuButton("Exit");
+
+        startBtn.setOnAction(e -> gameManager.startGame());
+        instructionBtn.setOnAction(e -> gameManager.showInstructions());
+        exitBtn.setOnAction(e -> Platform.exit());
+
+        getChildren().addAll(
+                title,
+                subtitle,
+                startBtn,
+                instructionBtn,
+                exitBtn
+        );
     }
-    
-    // 按钮样式工厂方法
-    private Button createStyledButton(String text) {
-        Button btn = new Button(text);
-        btn.setStyle(
-            "-fx-font-size: 18px;" +
-            "-fx-padding: 12px 40px;" +
-            "-fx-background-color: #3498db;" +
-            "-fx-text-fill: white;" +
-            "-fx-background-radius: 8px;" +
-            "-fx-cursor: hand;"
-        );
-        // 悬停效果（通过事件监听）
-        btn.setOnMouseEntered(e -> 
-            btn.setStyle(btn.getStyle() + "-fx-background-color: #2980b9;")
-        );
-        btn.setOnMouseExited(e -> 
-            btn.setStyle(btn.getStyle().replace("-fx-background-color: #2980b9;", "-fx-background-color: #3498db;"))
-        );
-        return btn;
-    }
-    
-    // Getter方法供外部获取按钮实例
-    public Button getStartBtn() { return startBtn; }
-    public Button getInstructionBtn() { return instructionBtn; }
-    public Button getExitBtn() { return exitBtn; }
-    
-    // 动态修改标题颜色的方法
-    public void setTitleColor(String color) {
-        title.setStyle("-fx-text-fill: " + color + ";");
+
+    private Button createMenuButton(String text) {
+        Button button = new Button(text);
+
+        button.setPrefWidth(260);
+        button.setPrefHeight(48);
+        button.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+
+        String normalStyle =
+                "-fx-background-color: #3C8DBC;" +
+                "-fx-text-fill: white;" +
+                "-fx-background-radius: 12;" +
+                "-fx-border-radius: 12;" +
+                "-fx-border-color: #9ED8FF;" +
+                "-fx-border-width: 1.5;" +
+                "-fx-cursor: hand;";
+
+        String hoverStyle =
+                "-fx-background-color: #5DADE2;" +
+                "-fx-text-fill: white;" +
+                "-fx-background-radius: 12;" +
+                "-fx-border-radius: 12;" +
+                "-fx-border-color: white;" +
+                "-fx-border-width: 2;" +
+                "-fx-cursor: hand;" +
+                "-fx-effect: dropshadow(gaussian, #9ED8FF, 12, 0.5, 0, 0);";
+
+        button.setStyle(normalStyle);
+
+        button.setOnMouseEntered(e -> button.setStyle(hoverStyle));
+        button.setOnMouseExited(e -> button.setStyle(normalStyle));
+
+        return button;
     }
 }

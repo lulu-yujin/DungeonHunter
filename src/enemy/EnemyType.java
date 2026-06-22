@@ -20,12 +20,11 @@ public class EnemyType {
 class Slime extends Enemy {
 
     public Slime(int row, int col, MazeMap mazeMap) {
-        super(row, col, "/slime.png", mazeMap);
+        super(row, col, "/slime.png", mazeMap, 30, 5, 20);
     }
 
     @Override
     public void move() {
-
         int nextRow = row + ((int) (Math.random() * 3) - 1);
         int nextCol = col + ((int) (Math.random() * 3) - 1);
 
@@ -42,12 +41,11 @@ class Goblin extends Enemy {
     private int dir = 1;
 
     public Goblin(int row, int col, MazeMap mazeMap) {
-        super(row, col, "/goblin.png", mazeMap);
+        super(row, col, "/goblin.png", mazeMap, 50, 10, 35);
     }
 
     @Override
     public void move() {
-
         int nextCol = col + dir;
 
         if (canMoveTo(row, nextCol)) {
@@ -71,12 +69,11 @@ class Skeleton extends Enemy {
     private int frameCount = 0;
 
     public Skeleton(int row, int col, MazeMap mazeMap) {
-        super(row, col, "/skeleton.png", mazeMap);
+        super(row, col, "/skeleton.png", mazeMap, 120, 15, 100);
     }
 
     @Override
     public void move() {
-
         frameCount++;
 
         if (frameCount % 100 == 0) {
