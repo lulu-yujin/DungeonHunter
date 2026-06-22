@@ -1,39 +1,47 @@
 package ui;
 
+import game.GameManager;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import player.Player;
 
 public class GameOverUI extends VBox {
 
-    private Label resultLabel;
-    private Label statsLabel;
+    private GameManager gameManager;
 
-    private Button replayButton;
-    private Button menuButton;
+    public GameOverUI(GameManager gameManager, boolean win) {
+        this.gameManager = gameManager;
 
-    public GameOverUI() {
-
-        setSpacing(20);
+        setSpacing(22);
+        setPadding(new Insets(60));
         setAlignment(Pos.CENTER);
 
-        setStyle("""
-                -fx-background-color:
-                rgba(0,0,0,0.85);
-                """);
+        if (win) {
+            setStyle("-fx-background-color: linear-gradient(to bottom, #145A32, #1E8449);");
+        } else {
+            setStyle("-fx-background-color: linear-gradient(to bottom, #2C0000, #641E16);");
+        }
 
-        resultLabel =
-                new Label("GAME OVER");
+        Label resultLabel = new Label(win ? "YOU WIN" : "GAME OVER");
+        resultLabel.setFont(Font.font("Georgia", FontWeight.BOLD, 56));
+        resultLabel.setTextFill(Color.web("#F5E6A8"));
 
-        statsLabel =
-                new Label();
+        Label statsLabel = new Label(getStatsText());
+        statsLabel.setFont(Font.font("Arial", 18));
+        statsLabel.setTextFill(Color.WHITE);
+        statsLabel.setAlignment(Pos.CENTER);
 
-        replayButton =
-                new Button("Play Again");
+        Button replayButton = createButton("Play Again");
+        Button menuButton = createButton("Main Menu");
 
-        menuButton =
-                new Button("Main Menu");
+        replayButton.setOnAction(e -> gameManager.restartGame());
+        menuButton.setOnAction(e -> gameManager.showStartMenu());
 
         getChildren().addAll(
                 resultLabel,
@@ -43,21 +51,33 @@ public class GameOverUI extends VBox {
         );
     }
 
-    public void setWin() {
-        resultLabel.setText("YOU WIN");
+    private String getStatsText() {
+        Player player = gameManager.getPlayer();
+
+        if (player == null) {
+            return "";
+        }
+
+        return "Kills: " + player.getKills()
+                + "\nCoins: " + player.getCoins()
+                + "\nWeapon: " + player.getWeaponName()
+                + "\nDamage: " + player.getDamage();
     }
 
-    public void setLose() {
-        resultLabel.setText("GAME OVER");
-    }
+    private Button createButton(String text) {
+        Button button = new Button(text);
 
-    public void updateStats(
-            int kills,
-            int coins) {
+        button.setPrefWidth(240);
+        button.setPrefHeight(48);
+        button.setFont(Font.font("Arial", FontWeight.BOLD, 17));
 
-        statsLabel.setText(
-                "Kills: " + kills +
-                "\nCoins: " + coins
+        button.setStyle(
+                "-fx-background-color: #F5E6A8;" +
+                "-fx-text-fill: #222222;" +
+                "-fx-background-radius: 12;" +
+                "-fx-cursor: hand;"
         );
+
+        return button;
     }
 }

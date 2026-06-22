@@ -1,61 +1,90 @@
 package ui;
 
+import game.GameManager;
+import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.layout.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
-public class MainGameUI extends BorderPane {
+public class StartMenu extends VBox {
 
-    private GameHUD hud;
-    private GridPane mapGrid;
+    private GameManager gameManager;
 
-    public MainGameUI() {
+    public StartMenu(GameManager gameManager) {
+        this.gameManager = gameManager;
 
-        createHUD();
-        createMap();
+        setAlignment(Pos.CENTER);
+        setSpacing(22);
+        setPadding(new Insets(60));
 
-        setTop(hud);
-        setCenter(mapGrid);
+        setStyle(
+                "-fx-background-color: linear-gradient(to bottom, #141E30, #243B55);"
+        );
+
+        Label title = new Label("MAZE HUNTER");
+        title.setFont(Font.font("Georgia", FontWeight.BOLD, 56));
+        title.setTextFill(Color.web("#F5E6A8"));
+        title.setStyle(
+                "-fx-effect: dropshadow(gaussian, black, 8, 0.6, 2, 2);"
+        );
+
+        Label subtitle = new Label("Collect keys. Defeat monsters. Escape the maze.");
+        subtitle.setFont(Font.font("Arial", 18));
+        subtitle.setTextFill(Color.web("#D6D6D6"));
+
+        Button startBtn = createMenuButton("Start Game");
+        Button instructionBtn = createMenuButton("Instructions");
+        Button exitBtn = createMenuButton("Exit");
+
+        startBtn.setOnAction(e -> gameManager.startGame());
+        instructionBtn.setOnAction(e -> gameManager.showInstructions());
+        exitBtn.setOnAction(e -> Platform.exit());
+
+        getChildren().addAll(
+                title,
+                subtitle,
+                startBtn,
+                instructionBtn,
+                exitBtn
+        );
     }
 
-    private void createHUD() {
-        hud = new GameHUD();
-    }
+    private Button createMenuButton(String text) {
+        Button button = new Button(text);
 
-    private void createMap() {
+        button.setPrefWidth(260);
+        button.setPrefHeight(48);
+        button.setFont(Font.font("Arial", FontWeight.BOLD, 18));
 
-        mapGrid = new GridPane();
-        mapGrid.setAlignment(Pos.CENTER);
+        String normalStyle =
+                "-fx-background-color: #3C8DBC;" +
+                "-fx-text-fill: white;" +
+                "-fx-background-radius: 12;" +
+                "-fx-border-radius: 12;" +
+                "-fx-border-color: #9ED8FF;" +
+                "-fx-border-width: 1.5;" +
+                "-fx-cursor: hand;";
 
-        int rows = 15;
-        int cols = 20;
+        String hoverStyle =
+                "-fx-background-color: #5DADE2;" +
+                "-fx-text-fill: white;" +
+                "-fx-background-radius: 12;" +
+                "-fx-border-radius: 12;" +
+                "-fx-border-color: white;" +
+                "-fx-border-width: 2;" +
+                "-fx-cursor: hand;" +
+                "-fx-effect: dropshadow(gaussian, #9ED8FF, 12, 0.5, 0, 0);";
 
-        for (int r = 0; r < rows; r++) {
+        button.setStyle(normalStyle);
 
-            for (int c = 0; c < cols; c++) {
+        button.setOnMouseEntered(e -> button.setStyle(hoverStyle));
+        button.setOnMouseExited(e -> button.setStyle(normalStyle));
 
-                Rectangle tile =
-                        new Rectangle(32, 32);
-
-                if (r == 0 || c == 0 ||
-                        r == rows - 1 ||
-                        c == cols - 1) {
-
-                    tile.setFill(Color.DARKGRAY);
-                }
-                else {
-                    tile.setFill(Color.LIGHTGRAY);
-                }
-
-                tile.setStroke(Color.BLACK);
-
-                mapGrid.add(tile, c, r);
-            }
-        }
-    }
-
-    public GameHUD getHud() {
-        return hud;
+        return button;
     }
 }
