@@ -1,114 +1,270 @@
 package game;
 
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+
+import ui.StartMenu;
+import ui.PauseMenu;
+import ui.GameOverUI;
+import ui.GamePanel;
+
 import player.Player;
-import game.CollisionManager;
+
+import enemy.Enemy;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import map.MazeMap;
 
 public class GameManager {
 
+    private Stage stage;
+
+    private Scene startScene;
+    private Scene gameScene;
+    private Scene pauseScene;
+    private Scene gameOverScene;
+    private Scene winScene;
+
+    private GamePanel gamePanel;
+
     private Player player;
-    private CollisionManager collisionManager;
 
-    public GameManager(Player player, CollisionManager collisionManager) {
-        this.player = player;
-        this.collisionManager = collisionManager;
+    private MazeMap map;
+
+    private List<Enemy> enemy;
+
+    public GameManager(Stage stage) {
+        this.stage = stage;
     }
 
-    public void handleKeyPressed(KeyEvent event) {
+    /*
+     * ==========================
+     * START MENU
+     * ==========================
+     */
 
-        if (event.getCode() == KeyCode.W) {
-            Player.Direction dir = Player.Direction.UP;
+    public void showStartMenu() {
 
-            int newRow = player.getNextRow(dir);
-            int newCol = player.getNextCol(dir);
+        StartMenu startMenu = new StartMenu();
 
-            if (!collisionManager.checkPlayerCollision(player,newRow, newCol)) {
-                player.move(dir);
-                checkPortalAfterMove();
-            } else {
-                player.face(dir);
-            }
-        }
+        startScene = new Scene(
+                startMenu,
+                960,
+                720
+        );
 
-        else if (event.getCode() == KeyCode.S) {
-            Player.Direction dir = Player.Direction.DOWN;
-
-            int newRow = player.getNextRow(dir);
-            int newCol = player.getNextCol(dir);
-
-            if (!collisionManager.checkPlayerCollision(player,newRow, newCol)) {
-                player.move(dir);
-                checkPortalAfterMove();
-            } else {
-                player.face(dir);
-            }
-        }
-
-        else if (event.getCode() == KeyCode.A) {
-            Player.Direction dir = Player.Direction.LEFT;
-
-            int newRow = player.getNextRow(dir);
-            int newCol = player.getNextCol(dir);
-
-            if (!collisionManager.checkPlayerCollision(player,newRow, newCol)) {
-                player.move(dir);
-                checkPortalAfterMove();
-            } else {
-                player.face(dir);
-            }
-        }
-
-        else if (event.getCode() == KeyCode.D) {
-            Player.Direction dir = Player.Direction.RIGHT;
-
-            int newRow = player.getNextRow(dir);
-            int newCol = player.getNextCol(dir);
-
-            if (!collisionManager.checkPlayerCollision(player,newRow, newCol)) {
-                player.move(dir);
-                checkPortalAfterMove();
-            } else {
-                player.face(dir);
-            }
-        }
-
-        else if (event.getCode() == KeyCode.J) {
-            int attackRow = player.getAttackRow();
-            int attackCol = player.getAttackCol();
-
-            System.out.println("Player attacks tile: " + attackRow + ", " + attackCol);
-
-            // 后面和 Enemy 系统连接：
-            // enemy.takeDamage(player.getDamage());
-        }
-
-        else if (event.getCode() == KeyCode.E) {
-            System.out.println("Open shop");
-        }
-
-        else if (event.getCode() == KeyCode.ESCAPE) {
-            System.out.println("Pause game");
-        }
+        stage.setScene(startScene);
     }
-    
-    private void checkPortalAfterMove() {
-        // Later connect with map system.
-        // If current tile is portal 'T', check whether player has key.
-        // Example:
-        //
-        // if (mazeMap.isPortal(player.getRow(), player.getCol())) {
-        //     if (player.hasKey()) {
-        //         mazeMap.nextLevel();
-        //         int[] spawn = mazeMap.getSpawnPoint();
-        //         player.resetToSpawn(spawn[0], spawn[1]);
-        //     } else {
-        //         System.out.println("You need a key to enter the next map.");
-        //     }
-        // }
+
+    /*
+     * ==========================
+     * START GAME
+     * ==========================
+     */
+
+    public void startGame() {
+
+        initializeGame();
+
+        gamePanel = new GamePanel(
+                player,
+                enemy,
+                map,
+                this
+        );
+
+        gameScene = new Scene(
+                gamePanel,
+                960,
+                720
+        );
+
+        stage.setScene(gameScene);
+
+        gamePanel.requestFocus();
+
+        gamePanel.startGameLoop();
     }
+
+    /*
+     * ==========================
+     * CREATE OBJECTS
+     * ==========================
+     */
+
+    private void initializeGame() {
+
+        loadMap();
+
+        createPlayer();
+
+        createMonsters();
+    }
+
+    private void loadMap() {
+
+        map = new MazeMap();
+    }
+
+    private void createPlayer() {
+
+        player = new Player(
+                100,    // x
+                100     // y
+        );
+    }
+
+    private void createMonsters() {
+
+        enemy = new ArrayList<>();
+
+        /*
+         * Beginner Zone
+         */
+        enemy.add(
+                new Slime(300, 200)
+        );
+
+        enemy.add(
+                new Slime(350, 250)
+        );
+
+        /*
+         * Advanced Zone
+         */
+        enemy.add(
+                new Goblin(600, 200)
+        );
+
+        enemy.add(
+                new Skeleton(700, 300)
+        );
+    }
+
+    /*
+     * ==========================
+     * PAUSE
+     * ==========================
+     */
+
+    public void pauseGame() {
+
+        if (gamePanel != null) {
+            gamePanel.stopGameLoop();
+        }
+
+        PauseMenu pauseMenu = new PauseMenu(this);
+
+        pauseScene = new Scene(
+                pauseMenu,
+                1024,
+                768
+        );
+
+        stage.setScene(pauseScene);
+    }
+
+    /*
+     * ==========================
+     * RESUME
+     * ==========================
+     */
+
+    public void resumeGame() {
+
+        stage.setScene(gameScene);
+
+        gamePanel.requestFocus();
+
+        gamePanel.startGameLoop();
+    }
+
+    /*
+     * ==========================
+     * RESTART
+     * ==========================
+     */
+
+    public void restartGame() {
+
+        startGame();
+    }
+
+    /*
+     * ==========================
+     * GAME OVER
+     * ==========================
+     */
+
+    public void gameOver() {
+
+        if (gamePanel != null) {
+            gamePanel.stopGameLoop();
+        }
+
+        GameOverUI screen =
+                new GameOverUI(
+                        this,
+                        player
+                );
+
+        gameOverScene = new Scene(
+                screen,
+                1024,
+                768
+        );
+
+        stage.setScene(gameOverScene);
+    }
+
+    /*
+     * ==========================
+     * WIN
+     * ==========================
+     */
+
+    public void winGame() {
+
+        if (gamePanel != null) {
+            gamePanel.stopGameLoop();
+        }
+
+        GameOverUI screen =
+                new GameOverUI(
+                        this,
+                        player
+                );
+
+        winScene = new Scene(
+                screen,
+                1024,
+                768
+        );
+
+        stage.setScene(winScene);
+    }
+
+    /*
+     * ==========================
+     * GETTERS
+     * ==========================
+     */
 
     public Player getPlayer() {
         return player;
+    }
+
+    public MazeMap getMap() {
+        return map;
+    }
+
+    public List<Enemy> getMonsters() {
+        return enemy;
+    }
+
+    public GamePanel getGamePanel() {
+        return gamePanel;
     }
 }

@@ -3,194 +3,173 @@ package ui;
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
+import javafx.scene.image.Image;
+import javafx.scene.layout.BorderPane;
 
-public class GamePanel extends Pane {
-    
-    final int tileSize = 48; 
-    final int screenCol = 20;
-    final int screenRow = 15;
-    final int screenWidth = tileSize * screenCol; 
-    final int screenHeight = tileSize * screenRow; 
-    
+public class GamePanel extends BorderPane {
+
+    private final int TILE_SIZE = 48;
+    private final int SCREEN_WIDTH = 960;
+    private final int SCREEN_HEIGHT = 720;
+
     private Canvas canvas;
     private GraphicsContext gc;
-    
-    //UI部分
-    private GameHUD hud;
-    private PauseMenu pauseMenu;
-    private GameOverUI gameOverUI;
-    
+
+    // 测试图片
+    private Image playerImage;
+    private Image slimeImage;
+    private Image wallImage;
+
+    // 测试坐标
+    private int playerX = 100;
+    private int playerY = 100;
+
     private AnimationTimer gameLoop;
-    private boolean running = false;
-    
 
-    
     public GamePanel() {
-        // 创建画布
-        canvas = new Canvas(screenWidth, screenHeight);
+
+        canvas = new Canvas(
+                SCREEN_WIDTH,
+                SCREEN_HEIGHT
+        );
+
         gc = canvas.getGraphicsContext2D();
-        
-        // 添加画布到面板
+
         getChildren().add(canvas);
-        
-        // 设置面板大小
-        setPrefSize(screenWidth, screenHeight);
-        
-        // 设置背景色（JavaFX方式）
-        setStyle("-fx-background-color: white;");
-        
-        // 确保可以获得焦点（用于键盘事件）
-        setFocusTraversable(true);
-        
-        createHUD();
-        createPauseMenu();
-        createGameOverUI();
+
+        loadImages();
+
+        setupKeyboard();
+
+        startGameLoop();
     }
-    
-    //创建HUD
-    private void createHUD() {
 
-        hud = new GameHUD();
+    private void loadImages() {
 
-        hud.setLayoutX(10);
-        hud.setLayoutY(10);
+        playerImage =
+                new Image(
+                        getClass()
+                        .getResourceAsStream(
+                                "/player/player_down.png"
+                        )
+                );
 
-        getChildren().add(hud);
+        slimeImage =
+                new Image(
+                        getClass()
+                        .getResourceAsStream(
+                                "/monster/slime.png"
+                        )
+                );
+
+        wallImage =
+                new Image(
+                        getClass()
+                        .getResourceAsStream(
+                                "/tiles/wall.png"
+                        )
+                );
     }
-    
-    //创建暂停菜单
-    private void createPauseMenu() {
 
-        pauseMenu = new PauseMenu();
+    public void startGameLoop() {
 
-        pauseMenu.setPrefSize(
-                screenWidth,
-                screenHeight
-        );
-
-        pauseMenu.setVisible(false);
-
-        getChildren().add(pauseMenu);
-    }
-    
-    //创建结束界面
-    private void createGameOverUI() {
-
-        gameOverUI = new GameOverUI();
-
-        gameOverUI.setPrefSize(
-                screenWidth,
-                screenHeight
-        );
-
-        gameOverUI.setVisible(false);
-
-        getChildren().add(gameOverUI);
-    }
-    
-    public void showPauseMenu() {
-
-        pauseMenu.setVisible(true);
-    }
-    
-    public void hidePauseMenu() {
-
-        pauseMenu.setVisible(false);
-    }
-    
-    public void showWinScreen() {
-
-        gameOverUI.setWin();
-
-        gameOverUI.updateStats(
-                20,
-                500
-        );
-
-        gameOverUI.setVisible(true);
-    }
-    
-    public void showGameOverScreen() {
-
-        gameOverUI.setLose();
-
-        gameOverUI.updateStats(
-                12,
-                300
-        );
-
-        gameOverUI.setVisible(true);
-    }
-    
-    public void startGameThread() {
-        if (gameLoop != null) {
-            return;
-        }
-        
-        running = true;
         gameLoop = new AnimationTimer() {
-            private long lastUpdate = 0;
-            private final long targetTime = 1000000000L / 60; // 60 FPS
-            
+
             @Override
             public void handle(long now) {
-                if (!running) {
-                    stop();
-                    return;
-                }
-                
-                if (now - lastUpdate >= targetTime) {
-                    update();    // 更新游戏逻辑
-                    repaint();   // 重绘画面
-                    lastUpdate = now;
-                }
+
+                update();
+
+                render();
             }
         };
-        
+
         gameLoop.start();
     }
-    
-    public void stopGame() {
-        running = false;
-        if (gameLoop != null) {
-            gameLoop.stop();
-            gameLoop = null;
+
+    private void update() {
+
+    }
+
+    private void render() {
+
+        gc.clearRect(
+                0,
+                0,
+                SCREEN_WIDTH,
+                SCREEN_HEIGHT
+        );
+
+        drawMap();
+
+        drawPlayer();
+
+        drawMonsters();
+    }
+
+    private void drawMap() {
+
+        for(int row=0;row<22;row++) {
+
+            for(int col=0;col<32;col++) {
+
+                gc.drawImage(
+                        wallImage,
+                        col * TILE_SIZE,
+                        row * TILE_SIZE,
+                        TILE_SIZE,
+                        TILE_SIZE
+                );
+            }
         }
     }
-    
-    public void update() {
-        
-    }
-    
-    public void repaint() {
-        // 清空画布（相当于Swing的super.paintComponent）
-        gc.clearRect(0, 0, screenWidth, screenHeight);
-        
-        // 绘制白色背景
-        gc.setFill(Color.WHITE);
-        gc.fillRect(0, 0, screenWidth, screenHeight);
-        
-        // 这里相当于Swing的paintComponent方法
-        paintComponent(gc);
-    }
-    
-    private void paintComponent(GraphicsContext gc) {
 
-        gc.setFill(Color.BLACK);
+    private void drawPlayer() {
 
-        
-        gc.fillRect(100, 100, tileSize, tileSize);
+        gc.drawImage(
+                playerImage,
+                playerX,
+                playerY,
+                TILE_SIZE,
+                TILE_SIZE
+        );
+    }
 
+    private void drawMonsters() {
+
+        gc.drawImage(
+                slimeImage,
+                300,
+                200,
+                TILE_SIZE,
+                TILE_SIZE
+        );
+
+        gc.drawImage(
+                slimeImage,
+                500,
+                300,
+                TILE_SIZE,
+                TILE_SIZE
+        );
     }
-    
-    // 获取屏幕尺寸的方法（供Main类使用）
-    public int getScreenWidth() {
-        return screenWidth;
-    }
-    
-    public int getScreenHeight() {
-        return screenHeight;
+
+    private void setupKeyboard() {
+
+        setFocusTraversable(true);
+
+        setOnKeyPressed(e -> {
+
+            switch (e.getCode()) {
+
+                case W -> playerY -= 5;
+
+                case S -> playerY += 5;
+
+                case A -> playerX -= 5;
+
+                case D -> playerX += 5;
+            }
+        });
     }
 }
