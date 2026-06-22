@@ -3,264 +3,128 @@ package game;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import ui.StartMenu;
-import ui.PauseMenu;
-import ui.GameOverUI;
-import ui.GamePanel;
-
 import player.Player;
 
-import enemy.Enemy;
+import ui.*;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import map.MazeMap;
+import shop.*;
 
 public class GameManager {
 
     private Stage stage;
 
-    private Scene startScene;
-    private Scene gameScene;
-    private Scene pauseScene;
-    private Scene gameOverScene;
-    private Scene winScene;
+    private Player player;
 
     private GamePanel gamePanel;
 
-    private Player player;
+    private int currentMap;
 
-    private MazeMap map;
-
-    private List<Enemy> enemy;
+    private GameState gameState;
 
     public GameManager(Stage stage) {
-        this.stage = stage;
-    }
 
-    /*
-     * ==========================
-     * START MENU
-     * ==========================
-     */
+        this.stage = stage;
+
+        currentMap = 1;
+    }
 
     public void showStartMenu() {
 
-        StartMenu startMenu = new StartMenu();
+        gameState = GameState.MENU;
 
-        startScene = new Scene(
-                startMenu,
-                960,
-                720
-        );
+        StartMenu menu = new StartMenu();
 
-        stage.setScene(startScene);
+        stage.setScene(new Scene(menu,960,720));
     }
-
-    /*
-     * ==========================
-     * START GAME
-     * ==========================
-     */
 
     public void startGame() {
 
-        initializeGame();
+        player = new Player();
 
-        gamePanel = new GamePanel(
-              
-        );
+        currentMap = 1;
 
-        gameScene = new Scene(
-                gamePanel,
-                960,
-                720
-        );
+        gameState = GameState.PLAYING;
 
-        stage.setScene(gameScene);
+        gamePanel = new GamePanel();
 
-        gamePanel.requestFocus();
+        stage.setScene(new Scene(gamePanel,960,720));
 
         gamePanel.startGameLoop();
     }
-
-    /*
-     * ==========================
-     * CREATE OBJECTS
-     * ==========================
-     */
-
-    private void initializeGame() {
-
-        loadMap();
-
-        createPlayer();
-
-        createMonsters();
-    }
-
-    private void loadMap() {
-
-        map = new MazeMap();
-    }
-
-    private void createPlayer() {
-
-        player = new Player(
-                100,    // x
-                100     // y
-        );
-    }
-
-    private void createMonsters() {
-
-        enemy = new ArrayList<>();
-
-        /*
-         * Beginner Zone
-         */
-        enemy.add(
-                new Slime(300, 200)
-        );
-
-        enemy.add(
-                new Slime(350, 250)
-        );
-
-        /*
-         * Advanced Zone
-         */
-        enemy.add(
-                new Goblin(600, 200)
-        );
-
-        enemy.add(
-                new Skeleton(700, 300)
-        );
-    }
-
-    /*
-     * ==========================
-     * PAUSE
-     * ==========================
-     */
-
-    public void pauseGame() {
-
-        if (gamePanel != null) {
-            gamePanel.stopGameLoop();
-        }
-
-        PauseMenu pauseMenu = new PauseMenu(this);
-
-        pauseScene = new Scene(
-                pauseMenu,
-                1024,
-                768
-        );
-
-        stage.setScene(pauseScene);
-    }
-
-    /*
-     * ==========================
-     * RESUME
-     * ==========================
-     */
-
-    public void resumeGame() {
-
-        stage.setScene(gameScene);
-
-        gamePanel.requestFocus();
-
-        gamePanel.startGameLoop();
-    }
-
-    /*
-     * ==========================
-     * RESTART
-     * ==========================
-     */
-
-    public void restartGame() {
-
-        startGame();
-    }
-
-    /*
-     * ==========================
-     * GAME OVER
-     * ==========================
-     */
-
-    public void gameOver() {
-
-        if (gamePanel != null) {
-            gamePanel.stopGameLoop();
-        }
-
-        GameOverUI screen =
-                new GameOverUI(
-                        this,
-                        player
-                );
-
-        gameOverScene = new Scene(
-                screen,
-                1024,
-                768
-        );
-
-        stage.setScene(gameOverScene);
-    }
-
-    /*
-     * ==========================
-     * WIN
-     * ==========================
-     */
-
-    public void winGame() {
-
-        if (gamePanel != null) {
-            gamePanel.stopGameLoop();
-        }
-
-        GameOverUI screen =
-                new GameOverUI(
-                    
-                );
-
-        winScene = new Scene(
-                screen,
-                1024,
-                768
-        );
-
-        stage.setScene(winScene);
-    }
-
-    /*
-     * ==========================
-     * GETTERS
-     * ==========================
-     */
 
     public Player getPlayer() {
         return player;
     }
 
-    public MazeMap getMap() {
-        return map;
+    public int getCurrentMap() {
+        return currentMap;
     }
 
-    public List<Enemy> getMonsters() {
-        return enemy;
+    public void nextMap() {
+
+        currentMap++;
+
+        if(currentMap > 3) {
+
+            showVictory();
+
+        } else {
+
+            gamePanel.loadMap(currentMap);
+        }
     }
 
-    public GamePanel getGamePanel() {
-        return gamePanel;
+    public void pauseGame() {
+
+        gameState = GameState.PAUSED;
+
+        gamePanel.stopGameLoop();
+
+        PauseMenu pause = new PauseMenu(this);
+
+        stage.setScene(new Scene(pause,960,720));
+    }
+
+    public void openShop() {
+
+        gameState = GameState.SHOP;
+
+        gamePanel.stopGameLoop();
+
+        Shop shop = new Shop(this);
+
+        stage.setScene(new Scene(shop,960,720));
+    }
+
+    public void resumeGame() {
+
+        gameState = GameState.PLAYING;
+
+        stage.setScene(new Scene(gamePanel,960,720));
+
+        gamePanel.startGameLoop();
+    }
+
+    public void showGameOver() {
+
+        gameState = GameState.GAME_OVER;
+
+        GameOverUI ui = new GameOverUI(this,false);
+
+        stage.setScene(new Scene(ui,960,720));
+    }
+
+    public void showVictory() {
+
+        gameState = GameState.WIN;
+
+        GameOverUI ui = new GameOverUI(this,true);
+
+        stage.setScene(new Scene(ui,960,720));
+    }
+
+    public void restartGame() {
+
+        startGame();
     }
 }

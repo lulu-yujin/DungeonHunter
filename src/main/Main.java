@@ -7,22 +7,17 @@ import javafx.stage.Stage;
 public class Main extends Application {
 
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage stage) {
 
         // 创建游戏管理器
-        GameManager gameManager = new GameManager(primaryStage);
+        GameManager gameManager = new GameManager(stage);
 
         // 显示开始菜单
         gameManager.showStartMenu();
 
         // 设置窗口标题
-        primaryStage.setTitle("Dungeon Hunters");
-
-        // 禁止调整窗口大小（可选）
-        primaryStage.setResizable(false);
-
-        // 显示窗口
-        primaryStage.show();
+        stage.setTitle("Dungeon Hunters");
+        stage.show();
     }
 
     public static void main(String[] args) {

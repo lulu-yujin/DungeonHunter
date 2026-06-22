@@ -6,6 +6,10 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import player.Player;
+
+import weapon.*;
+
 public class ShopUI {
     
     private Player player;
@@ -21,7 +25,7 @@ public class ShopUI {
     private static final int LEGENDARY_SWORD_PRICE = 500;
     
     public ShopUI() {
-        player = new Player("Hero");
+        player = new Player();
         shop = new Shop();
         initializeUI();
     }

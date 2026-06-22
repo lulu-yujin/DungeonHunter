@@ -1,9 +1,9 @@
 package enemy;
 
-class EnemyType extends Enemy {
+class Goblin extends Enemy {
 
-    public EnemyType(int row, int col) {
-        super(row, col, "/slime.png");
+    public Goblin(int row, int col) {
+        super(row, col, "/goblin.png");
     }
 
     @Override
@@ -19,12 +19,12 @@ class EnemyType extends Enemy {
     }
 }
 
-class Goblin extends Enemy {
+class Slime extends Enemy {
 
     private int dir = 1;
 
-    public Goblin(int row, int col) {
-        super(row, col, "/goblin.png");
+    public Slime(int row, int col) {
+        super(row, col, "/slime.png");
     }
 
     @Override

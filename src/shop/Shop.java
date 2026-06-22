@@ -1,5 +1,8 @@
 package shop;
 
+import player.*;
+import weapon.*;
+
 public class Shop {
 	 public boolean buyWeapon(Player player,
              Weapon weapon) {
