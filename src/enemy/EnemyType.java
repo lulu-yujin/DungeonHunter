@@ -1,8 +1,8 @@
 package enemy;
 
-class Enemies extends Enemy {
+class EnemyType extends Enemy {
 
-    public Enemies(int row, int col) {
+    public EnemyType(int row, int col) {
         super(row, col, "/slime.png");
     }
 
