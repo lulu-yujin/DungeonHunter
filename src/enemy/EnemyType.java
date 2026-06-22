@@ -1,9 +1,26 @@
 package enemy;
 
-class Goblin extends Enemy {
+import map.MazeMap;
 
-    public Goblin(int row, int col) {
-        super(row, col, "/goblin.png");
+public class EnemyType {
+
+    public static Enemy createSlime(int row, int col, MazeMap mazeMap) {
+        return new Slime(row, col, mazeMap);
+    }
+
+    public static Enemy createGoblin(int row, int col, MazeMap mazeMap) {
+        return new Goblin(row, col, mazeMap);
+    }
+
+    public static Enemy createSkeleton(int row, int col, MazeMap mazeMap) {
+        return new Skeleton(row, col, mazeMap);
+    }
+}
+
+class Slime extends Enemy {
+
+    public Slime(int row, int col, MazeMap mazeMap) {
+        super(row, col, "/slime.png", mazeMap);
     }
 
     @Override
@@ -12,28 +29,37 @@ class Goblin extends Enemy {
         int nextRow = row + ((int) (Math.random() * 3) - 1);
         int nextCol = col + ((int) (Math.random() * 3) - 1);
 
-        row = nextRow;
-        col = nextCol;
-
-        updateViewPosition();
+        if (canMoveTo(nextRow, nextCol)) {
+            row = nextRow;
+            col = nextCol;
+            updateViewPosition();
+        }
     }
 }
 
-class Slime extends Enemy {
+class Goblin extends Enemy {
 
     private int dir = 1;
 
-    public Slime(int row, int col) {
-        super(row, col, "/slime.png");
+    public Goblin(int row, int col, MazeMap mazeMap) {
+        super(row, col, "/goblin.png", mazeMap);
     }
 
     @Override
     public void move() {
 
-        col += dir;
+        int nextCol = col + dir;
 
-        if (col > 18 || col < 1) {
+        if (canMoveTo(row, nextCol)) {
+            col = nextCol;
+        } else {
             dir *= -1;
+
+            nextCol = col + dir;
+
+            if (canMoveTo(row, nextCol)) {
+                col = nextCol;
+            }
         }
 
         updateViewPosition();
@@ -44,8 +70,8 @@ class Skeleton extends Enemy {
 
     private int frameCount = 0;
 
-    public Skeleton(int row, int col) {
-        super(row, col, "/skeleton.png");
+    public Skeleton(int row, int col, MazeMap mazeMap) {
+        super(row, col, "/skeleton.png", mazeMap);
     }
 
     @Override

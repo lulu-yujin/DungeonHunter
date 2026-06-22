@@ -26,7 +26,9 @@ public class Player {
     }
 
     public enum PlayerAction {
-        NONE,
+    	    NONE,
+        PICK_KEY,
+        NEED_KEY,
         NEXT_LEVEL,
         WIN
     }
@@ -42,7 +44,8 @@ public class Player {
 
     private String weaponName;
     private Direction direction;
-    private boolean hasKey;
+    private int keyCount;
+    private static final int REQUIRED_KEYS = 3;
 
     // Player image path placeholders
     // The actual image files can be placed in res/player
@@ -66,7 +69,7 @@ public class Player {
         this.coins = 0;
         this.damage = 10;
         this.kills = 0;
-        this.hasKey = false;
+        this.keyCount = 0;
 
         this.weaponName = "Wooden Sword";
         this.direction = Direction.DOWN;
@@ -261,21 +264,47 @@ public class Player {
         kills++;
     }
     
-    public boolean hasKey() {
-        return hasKey;
+    public int getKeyCount() {
+        return keyCount;
+    }
+
+    public int getRequiredKeys() {
+        return REQUIRED_KEYS;
+    }
+
+    public boolean hasEnoughKeys() {
+        return keyCount >= REQUIRED_KEYS;
     }
 
     public void pickUpKey() {
-        hasKey = true;
+        keyCount++;
     }
 
-    public void removeKey() {
-        hasKey = false;
+    public void clearKeys() {
+        keyCount = 0;
+    }
+
+    public boolean useKeysForNextLevel() {
+        if (hasEnoughKeys()) {
+            keyCount = 0;
+            return true;
+        }
+
+        return false;
     }
     
     public PlayerAction checkCurrentTile(char tile) {
+        if (tile == 'K') {
+            pickUpKey();
+            return PlayerAction.PICK_KEY;
+        }
+
         if (tile == 'T') {
-            return PlayerAction.NEXT_LEVEL;
+            if (hasEnoughKeys()) {
+                return PlayerAction.NEXT_LEVEL;
+            } else {
+                return PlayerAction.NEED_KEY;
+            }
         }
 
         if (tile == 'E') {
@@ -289,7 +318,7 @@ public class Player {
         setPosition(row, col);
         this.direction = Direction.DOWN;
         this.moving = false;
-        this.hasKey = false;
+        this.keyCount = 0;
     }
 
     public void resetForNewGame(int row, int col) {
@@ -305,6 +334,6 @@ public class Player {
         this.weaponName = "Wooden Sword";
         this.direction = Direction.DOWN;
         this.moving = false;
-        this.hasKey = false;
+        this.keyCount = 0;
     }
 }

@@ -317,4 +317,7 @@ public class MazeMap {
     public boolean isExit(int row, int col) {
         return getChar(row, col) == EXIT;
     }
+    
+  
+    }
 }

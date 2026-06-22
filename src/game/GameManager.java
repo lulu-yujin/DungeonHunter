@@ -34,7 +34,7 @@ public class GameManager {
 
         StartMenu menu = new StartMenu();
 
-        stage.setScene(new Scene(menu,960,720));
+        stage.setScene(new Scene(menu, 960, 720));
     }
 
     public void startGame() {
@@ -45,9 +45,9 @@ public class GameManager {
 
         gameState = GameState.PLAYING;
 
-        gamePanel = new GamePanel();
+        gamePanel = new GamePanel(this);
 
-        stage.setScene(new Scene(gamePanel,960,720));
+        stage.setScene(new Scene(gamePanel, 960, 720));
 
         gamePanel.startGameLoop();
     }
@@ -62,9 +62,25 @@ public class GameManager {
 
     public void nextMap() {
 
+        if (player == null) {
+            return;
+        }
+
+        if (!player.hasEnoughKeys()) {
+            System.out.println(
+                    "You need 3 keys. Current keys: "
+                            + player.getKeyCount()
+                            + "/"
+                            + player.getRequiredKeys()
+            );
+            return;
+        }
+
+        player.useKeysForNextLevel();
+
         currentMap++;
 
-        if(currentMap > 3) {
+        if (currentMap > 3) {
 
             showVictory();
 
@@ -82,7 +98,7 @@ public class GameManager {
 
         PauseMenu pause = new PauseMenu(this);
 
-        stage.setScene(new Scene(pause,960,720));
+        stage.setScene(new Scene(pause, 960, 720));
     }
 
     public void openShop() {
@@ -93,14 +109,14 @@ public class GameManager {
 
         Shop shop = new Shop(this);
 
-        stage.setScene(new Scene(shop,960,720));
+        stage.setScene(new Scene(shop, 960, 720));
     }
 
     public void resumeGame() {
 
         gameState = GameState.PLAYING;
 
-        stage.setScene(new Scene(gamePanel,960,720));
+        stage.setScene(new Scene(gamePanel, 960, 720));
 
         gamePanel.startGameLoop();
     }
@@ -109,18 +125,18 @@ public class GameManager {
 
         gameState = GameState.GAME_OVER;
 
-        GameOverUI ui = new GameOverUI(this,false);
+        GameOverUI ui = new GameOverUI(this, false);
 
-        stage.setScene(new Scene(ui,960,720));
+        stage.setScene(new Scene(ui, 960, 720));
     }
 
     public void showVictory() {
 
         gameState = GameState.WIN;
 
-        GameOverUI ui = new GameOverUI(this,true);
+        GameOverUI ui = new GameOverUI(this, true);
 
-        stage.setScene(new Scene(ui,960,720));
+        stage.setScene(new Scene(ui, 960, 720));
     }
 
     public void restartGame() {
