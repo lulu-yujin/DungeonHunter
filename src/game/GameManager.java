@@ -69,10 +69,7 @@ public class GameManager {
         initializeGame();
 
         gamePanel = new GamePanel(
-                player,
-                enemy,
-                map,
-                this
+              
         );
 
         gameScene = new Scene(
@@ -233,8 +230,7 @@ public class GameManager {
 
         GameOverUI screen =
                 new GameOverUI(
-                        this,
-                        player
+                    
                 );
 
         winScene = new Scene(
