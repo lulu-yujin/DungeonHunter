@@ -1,6 +1,7 @@
 package game;
 
 import javafx.scene.Scene;
+import javafx.application.Platform;
 import javafx.stage.Stage;
 
 import player.Player;
@@ -16,10 +17,24 @@ public class GameManager {
     private Player player;
 
     private GamePanel gamePanel;
+    
+    private Scene gameScene;
 
     private int currentMap;
 
     private GameState gameState;
+    
+    private Scene createGameScene() {
+
+        Scene scene = new Scene(gamePanel, 960, 720);
+
+        scene.setOnKeyPressed(e -> {
+            gamePanel.handleKeyPressed(e.getCode());
+            e.consume();
+        });
+
+        return scene;
+    }
 
     public GameManager(Stage stage) {
 
@@ -54,7 +69,25 @@ public class GameManager {
 
         gamePanel = new GamePanel(this);
 
-        stage.setScene(new Scene(gamePanel, 960, 720));
+        gameScene = new Scene(gamePanel, 960, 720);
+
+        gameScene.setOnKeyPressed(e -> {
+            gamePanel.handleKeyPressed(e.getCode());
+            e.consume();
+        });
+
+        gameScene.setOnKeyReleased(e -> {
+            gamePanel.handleKeyReleased(e.getCode());
+            e.consume();
+        });
+
+        stage.setScene(gameScene);
+
+        Platform.runLater(() -> {
+            stage.toFront();
+            stage.requestFocus();
+            gamePanel.requestFocus();
+        });
 
         gamePanel.startGameLoop();
     }
@@ -100,6 +133,8 @@ public class GameManager {
     public void pauseGame() {
 
         gameState = GameState.PAUSED;
+        
+        gamePanel.clearInputState();
 
         gamePanel.stopGameLoop();
 
@@ -111,6 +146,8 @@ public class GameManager {
     public void openShop() {
 
         gameState = GameState.SHOP;
+        
+        gamePanel.clearInputState();
 
         gamePanel.stopGameLoop();
 
@@ -123,14 +160,30 @@ public class GameManager {
 
         gameState = GameState.PLAYING;
 
-        stage.setScene(new Scene(gamePanel, 960, 720));
+        stage.setScene(gameScene);
+        
+        gamePanel.clearInputState();
+
+        Platform.runLater(() -> {
+            stage.toFront();
+            stage.requestFocus();
+            gamePanel.requestFocus();
+        });
 
         gamePanel.startGameLoop();
     }
 
     public void showGameOver() {
 
+    		if (gameState == GameState.GAME_OVER) {
+            return;
+        }
+
         gameState = GameState.GAME_OVER;
+
+        if (gamePanel != null) {
+            gamePanel.stopGameLoop();
+        }
 
         GameOverUI ui = new GameOverUI(this, false);
 
@@ -139,7 +192,15 @@ public class GameManager {
 
     public void showVictory() {
 
+        if (gameState == GameState.WIN) {
+            return;
+        }
+
         gameState = GameState.WIN;
+
+        if (gamePanel != null) {
+            gamePanel.stopGameLoop();
+        }
 
         GameOverUI ui = new GameOverUI(this, true);
 

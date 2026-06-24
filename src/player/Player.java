@@ -75,10 +75,10 @@ public class Player {
         this.direction = Direction.DOWN;
         this.moving = false;
 
-        this.spriteUp = "/player/player_up.png";
-        this.spriteDown = "/player/player_down.png";
-        this.spriteLeft = "/player/player_left.png";
-        this.spriteRight = "/player/player_right.png";
+        this.spriteUp = "/player/player.png";
+        this.spriteDown = "/player/player.png";
+        this.spriteLeft = "/player/player.png";
+        this.spriteRight = "/player/player.png";
     }
 
     public int getRow() {

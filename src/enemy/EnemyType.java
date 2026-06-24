@@ -17,10 +17,10 @@ public class EnemyType {
     }
 }
 
-class Slime extends Enemy {
+class Skeleton extends Enemy {
 
-    public Slime(int row, int col, MazeMap mazeMap) {
-        super(row, col, "/slime.png", mazeMap, 30, 5, 20);
+    public Skeleton(int row, int col, MazeMap mazeMap) {
+        super(row, col, "/enemy/goblin.png", mazeMap, 120, 15, 100);
     }
 
     @Override
@@ -41,7 +41,7 @@ class Goblin extends Enemy {
     private int dir = 1;
 
     public Goblin(int row, int col, MazeMap mazeMap) {
-        super(row, col, "/goblin.png", mazeMap, 50, 10, 35);
+        super(row, col, "/enemy/slime.png", mazeMap, 50, 10, 35);
     }
 
     @Override
@@ -64,12 +64,12 @@ class Goblin extends Enemy {
     }
 }
 
-class Skeleton extends Enemy {
+class Slime extends Enemy {
 
     private int frameCount = 0;
 
-    public Skeleton(int row, int col, MazeMap mazeMap) {
-        super(row, col, "/skeleton.png", mazeMap, 120, 15, 100);
+    public Slime(int row, int col, MazeMap mazeMap) {
+        super(row, col, "/enemy/skeleton.png", mazeMap, 30, 5, 20);
     }
 
     @Override

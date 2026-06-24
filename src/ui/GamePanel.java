@@ -1,6 +1,9 @@
 package ui;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+import javafx.scene.input.KeyCode;
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -10,6 +13,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.application.Platform;
 
 import game.GameManager;
 import map.*;
@@ -50,6 +54,10 @@ public class GamePanel extends Pane {
     
     //怪物
     private ArrayList<Enemy> enemies = new ArrayList<>();
+    
+    private Set<KeyCode> pressedKeys = new HashSet<>();
+
+    private int moveCooldown = 0;
 
     private int enemyMoveCounter = 0;
     
@@ -62,6 +70,7 @@ public class GamePanel extends Pane {
     //------------------------
 
     private AnimationTimer gameLoop;
+    private boolean gameEnded = false;
 
     //------------------------
     // 玩家贴图缓存
@@ -83,11 +92,9 @@ public class GamePanel extends Pane {
 
         setupMap();
 
-        setupKeyHandler();
-
         setupGameLoop();
 
-        requestFocus();
+        Platform.runLater(() -> requestFocus());
     }
 
     //------------------------
@@ -188,7 +195,7 @@ public class GamePanel extends Pane {
 
         spawnEnemies();
 
-        requestFocus();
+        Platform.runLater(() -> requestFocus());
     }
 
     //------------------------
@@ -253,6 +260,15 @@ public class GamePanel extends Pane {
     //------------------------
 
     private void update() {
+    	
+    		if (gameEnded) {
+            return;
+        }
+    		
+    		if (moveCooldown > 0) {
+    	        moveCooldown--;
+    	    }
+
 
         if (attackCooldown > 0) {
             attackCooldown--;
@@ -261,6 +277,8 @@ public class GamePanel extends Pane {
         if (playerDamageCooldown > 0) {
             playerDamageCooldown--;
         }
+        
+        processInput();
 
         checkKeyCollection();
 
@@ -314,7 +332,7 @@ public class GamePanel extends Pane {
             return;
         }
 
-        attackCooldown = 20;
+        attackCooldown = 12;
 
         for (int i = enemies.size() - 1; i >= 0; i--) {
 
@@ -500,6 +518,10 @@ public class GamePanel extends Pane {
         }
 
         if (player.isDead()) {
+        	    
+        		gameEnded = true;
+
+            stopGameLoop();
 
             gameManager.showGameOver();
         }
@@ -732,63 +754,55 @@ public class GamePanel extends Pane {
     // 按键
     //------------------------
 
-    private void setupKeyHandler() {
+    public void handleKeyPressed(KeyCode key) {
 
-        setFocusTraversable(true);
+        pressedKeys.add(key);
 
-        setOnKeyPressed(e -> {
+        if (key == KeyCode.ESCAPE) {
+            clearInputState();
+            gameManager.pauseGame();
+            return;
+        }
 
-            KeyCode key = e.getCode();
+        if (key == KeyCode.B) {
+            clearInputState();
+            gameManager.openShop();
+        }
+    }
+    
+    public void handleKeyReleased(KeyCode key) {
+        pressedKeys.remove(key);
+    }
+    
+    public void clearInputState() {
+        pressedKeys.clear();
+        moveCooldown = 0;
+        attackCooldown = 0;
+    }
+    
+    private void processInput() {
 
-            switch (key) {
+        if (pressedKeys.contains(KeyCode.SPACE)) {
+            playerAttack();
+        }
 
-                case ESCAPE:
+        if (moveCooldown > 0) {
+            return;
+        }
 
-                    gameManager.pauseGame();
-
-                    break;
-
-                case B:
-
-                    gameManager.openShop();
-
-                    break;
-
-                case W:
-
-                    movePlayer(Player.Direction.UP);
-
-                    break;
-
-                case A:
-
-                    movePlayer(Player.Direction.LEFT);
-
-                    break;
-
-                case S:
-
-                    movePlayer(Player.Direction.DOWN);
-
-                    break;
-
-                case D:
-
-                    movePlayer(Player.Direction.RIGHT);
-
-                    break;
-
-                case SPACE:
-
-                    playerAttack();
-
-                    break;
-
-                default:
-
-                    break;
-            }
-        });
+        if (pressedKeys.contains(KeyCode.W)) {
+            movePlayer(Player.Direction.UP);
+            moveCooldown = 8;
+        } else if (pressedKeys.contains(KeyCode.A)) {
+            movePlayer(Player.Direction.LEFT);
+            moveCooldown = 8;
+        } else if (pressedKeys.contains(KeyCode.S)) {
+            movePlayer(Player.Direction.DOWN);
+            moveCooldown = 8;
+        } else if (pressedKeys.contains(KeyCode.D)) {
+            movePlayer(Player.Direction.RIGHT);
+            moveCooldown = 8;
+        }
     }
 
     //------------------------
