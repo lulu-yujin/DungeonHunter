@@ -18,6 +18,7 @@ public class Main extends Application {
         // 设置窗口标题
         stage.setTitle("Dungeon Hunters");
         stage.show();
+        
     }
 
     public static void main(String[] args) {
