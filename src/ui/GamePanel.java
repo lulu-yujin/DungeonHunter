@@ -57,7 +57,15 @@ public class GamePanel extends Pane {
 
     private static final int SPRITE_SIZE = 64;
     private static final int SPRITE_OFFSET = (SPRITE_SIZE - TILE_SIZE) / 2;
+    
+    private int getEnemySpriteSize(Enemy enemy) {
 
+        if (enemy.getTypeName().equals("skeleton")) {
+            return 80;
+        }
+
+        return SPRITE_SIZE;
+    }
     //------------------------
     // 地图系统
     //------------------------
@@ -521,12 +529,15 @@ public class GamePanel extends Pane {
 
             playerAnimator.play(weapon + "_attack_" + dir, false);
 
+            playerAnimator.update();
+
         } else {
 
-            playerAnimator.play(weapon + "_walk_" + dir, true);
+            playerAnimator.setClipFrame(
+                    weapon + "_walk_" + dir,
+                    player.getWalkFrameIndex()
+            );
         }
-
-        playerAnimator.update();
     }
     
     private void updateEnemyAnimations() {
@@ -554,8 +565,6 @@ public class GamePanel extends Pane {
                 updateSkeletonAnimation(enemy, animator);
             }
 
-            animator.update();
-
             if (enemy.isAttacking() && animator.isFinished()) {
                 enemy.stopAttack();
             }
@@ -570,9 +579,13 @@ public class GamePanel extends Pane {
 
             animator.play("attack_" + dir, false);
 
+            animator.update();
+
         } else {
 
             animator.play("idle", true);
+
+            animator.update();
         }
     }
     
@@ -584,9 +597,14 @@ public class GamePanel extends Pane {
 
             animator.play("attack_" + dir, false);
 
+            animator.update();
+
         } else {
 
-            animator.play("walk_" + dir, true);
+            animator.setClipFrame(
+                    "walk_" + dir,
+                    enemy.getWalkFrameIndex()
+            );
         }
     }
     
@@ -598,9 +616,14 @@ public class GamePanel extends Pane {
 
             animator.play("attack_" + dir, false);
 
+            animator.update();
+
         } else {
 
-            animator.play("walk_" + dir, true);
+            animator.setClipFrame(
+                    "walk_" + dir,
+                    enemy.getWalkFrameIndex()
+            );
         }
     }
     
@@ -1024,58 +1047,62 @@ public class GamePanel extends Pane {
 
     private void drawEnemies() {
 
-        for (Enemy enemy : enemies) {
+    for (Enemy enemy : enemies) {
 
-            int x = enemy.getCol() * TILE_SIZE - SPRITE_OFFSET;
-            int y = enemy.getRow() * TILE_SIZE - SPRITE_OFFSET;
+        int size = getEnemySpriteSize(enemy);
 
-            Animator animator = enemyAnimators.get(enemy);
+        int offset = (size - TILE_SIZE) / 2;
 
-            Image frame = null;
+        int x = enemy.getCol() * TILE_SIZE - offset;
+        int y = enemy.getRow() * TILE_SIZE - offset;
 
-            if (animator != null) {
-                frame = animator.getCurrentFrame();
-            }
+        Animator animator = enemyAnimators.get(enemy);
 
-            if (frame != null) {
+        Image frame = null;
 
-                gc.drawImage(
-                        frame,
-                        x,
-                        y,
-                        SPRITE_SIZE,
-                        SPRITE_SIZE
-                );
+        if (animator != null) {
+            frame = animator.getCurrentFrame();
+        }
 
-            } else if (enemy.getSprite().getImage() != null) {
+        if (frame != null) {
 
-                gc.drawImage(
-                        enemy.getSprite().getImage(),
-                        x,
-                        y,
-                        SPRITE_SIZE,
-                        SPRITE_SIZE
-                );
+            gc.drawImage(
+                    frame,
+                    x,
+                    y,
+                    size,
+                    size
+            );
 
-            } else {
+        } else if (enemy.getSprite().getImage() != null) {
 
-                gc.setFill(Color.RED);
+            gc.drawImage(
+                    enemy.getSprite().getImage(),
+                    x,
+                    y,
+                    size,
+                    size
+            );
 
-                gc.fillOval(
-                        enemy.getCol() * TILE_SIZE + 8,
-                        enemy.getRow() * TILE_SIZE + 8,
-                        TILE_SIZE - 16,
-                        TILE_SIZE - 16
-                );
-            }
+        } else {
 
-            drawEnemyHealthBar(
-                    enemy,
-                    enemy.getCol() * TILE_SIZE,
-                    enemy.getRow() * TILE_SIZE
+            gc.setFill(Color.RED);
+
+            gc.fillOval(
+                    enemy.getCol() * TILE_SIZE + 8,
+                    enemy.getRow() * TILE_SIZE + 8,
+                    TILE_SIZE - 16,
+                    TILE_SIZE - 16
             );
         }
+
+        drawEnemyHealthBar(
+                enemy,
+                enemy.getCol() * TILE_SIZE,
+                enemy.getRow() * TILE_SIZE
+        );
     }
+}
     
     private void drawEnemyHealthBar(Enemy enemy, double x, double y) {
 

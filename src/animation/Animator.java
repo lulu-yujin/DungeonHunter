@@ -87,6 +87,29 @@ public class Animator {
             }
         }
     }
+    
+    public void setClipFrame(String clipName, int index) {
+
+        Image[] frames = clips.get(clipName);
+
+        if (frames == null || frames.length == 0) {
+            System.err.println("[Animator] Missing clip: " + clipName);
+            return;
+        }
+
+        currentClip = clipName;
+        currentFrames = frames;
+
+        frameIndex = index % frames.length;
+
+        if (frameIndex < 0) {
+            frameIndex = 0;
+        }
+
+        frameTick = 0;
+        loop = false;
+        finished = false;
+    }
 
     public Image getCurrentFrame() {
 

@@ -48,6 +48,8 @@ class Goblin extends Enemy {
             setDirectionByDelta(0, dir);
 
             col = nextCol;
+            
+            nextWalkFrame();
 
         } else {
 
@@ -60,6 +62,8 @@ class Goblin extends Enemy {
                 setDirectionByDelta(0, dir);
 
                 col = nextCol;
+                
+                nextWalkFrame();
             }
         }
 
@@ -100,6 +104,8 @@ class Skeleton extends Enemy {
 
             row = nextRow;
             col = nextCol;
+            
+            nextWalkFrame();
 
             updateViewPosition();
         }

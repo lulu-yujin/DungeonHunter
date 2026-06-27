@@ -45,6 +45,7 @@ public class Player {
     private String weaponName;
     private Direction direction;
     private int keyCount;
+    private int walkFrameIndex = 0;
     private static final int REQUIRED_KEYS = 3;
 
     // Player image path placeholders
@@ -111,6 +112,8 @@ public class Player {
         this.col += direction.getDCol();
         
         this.moving = true;
+        
+        nextWalkFrame();
     }
     
     public boolean isAttacking() {
@@ -123,6 +126,14 @@ public class Player {
 
     public void stopAttack() {
         attacking = false;
+    }
+    
+    public int getWalkFrameIndex() {
+        return walkFrameIndex;
+    }
+
+    public void nextWalkFrame() {
+        walkFrameIndex++;
     }
 
     public boolean isMoving() {

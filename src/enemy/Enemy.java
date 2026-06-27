@@ -20,6 +20,7 @@ public abstract class Enemy {
     protected int hp;
     protected int damage;
     protected int coinReward;
+    protected int walkFrameIndex = 0;
 
     protected String typeName;
 
@@ -95,6 +96,14 @@ public abstract class Enemy {
 
     public String getTypeName() {
         return typeName;
+    }
+    
+    public int getWalkFrameIndex() {
+        return walkFrameIndex;
+    }
+
+    protected void nextWalkFrame() {
+        walkFrameIndex++;
     }
 
     public Player.Direction getDirection() {
