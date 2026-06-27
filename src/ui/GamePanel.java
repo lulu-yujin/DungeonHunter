@@ -8,12 +8,14 @@ import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.application.Platform;
+import animation.Animator;
+import javafx.scene.image.Image;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import game.GameManager;
 import map.*;
@@ -43,6 +45,18 @@ public class GamePanel extends Pane {
     private Canvas canvas;
 
     private GraphicsContext gc;
+    
+    //动画
+    private Animator playerAnimator;
+
+    private Map<Enemy, Animator> enemyAnimators = new HashMap<>();
+
+    private int playerAttackTimer = 0;
+
+    private static final int PLAYER_ATTACK_DURATION = 18;
+
+    private static final int SPRITE_SIZE = 64;
+    private static final int SPRITE_OFFSET = (SPRITE_SIZE - TILE_SIZE) / 2;
 
     //------------------------
     // 地图系统
@@ -129,6 +143,10 @@ public class GamePanel extends Pane {
         spawnPlayer();
         
         spawnEnemies();
+        
+        setupPlayerAnimator();
+
+        setupEnemyAnimators();
     }
     
     private void spawnEnemies() {
@@ -195,7 +213,182 @@ public class GamePanel extends Pane {
 
         spawnEnemies();
 
-        Platform.runLater(() -> requestFocus());
+        setupEnemyAnimators();
+
+        requestFocus();
+    }
+    
+    //动画加载
+    private void setupPlayerAnimator() {
+
+        playerAnimator = new Animator();
+
+        addPlayerWeaponClips("wood");
+        addPlayerWeaponClips("iron");
+        addPlayerWeaponClips("diamond");
+
+        playerAnimator.setFrameSpeed(8);
+    }
+    
+    private void addPlayerWeaponClips(String weapon) {
+
+        playerAnimator.addClip(
+                weapon + "_walk_down",
+                "/player/player_" + weapon + "_walk_down_0.png",
+                "/player/player_" + weapon + "_walk_down_1.png"
+        );
+
+        playerAnimator.addClip(
+                weapon + "_walk_up",
+                "/player/player_" + weapon + "_walk_up_0.png",
+                "/player/player_" + weapon + "_walk_up_1.png"
+        );
+
+        playerAnimator.addClip(
+                weapon + "_walk_left",
+                "/player/player_" + weapon + "_walk_left_0.png",
+                "/player/player_" + weapon + "_walk_left_1.png"
+        );
+
+        playerAnimator.addClip(
+                weapon + "_walk_right",
+                "/player/player_" + weapon + "_walk_right_0.png",
+                "/player/player_" + weapon + "_walk_right_1.png"
+        );
+
+        playerAnimator.addClip(
+                weapon + "_attack_down",
+                "/player/player_" + weapon + "_attack_down_0.png"
+        );
+
+        playerAnimator.addClip(
+                weapon + "_attack_up",
+                "/player/player_" + weapon + "_attack_up_0.png"
+        );
+
+        playerAnimator.addClip(
+                weapon + "_attack_left",
+                "/player/player_" + weapon + "_attack_left_0.png"
+        );
+
+        playerAnimator.addClip(
+                weapon + "_attack_right",
+                "/player/player_" + weapon + "_attack_right_0.png"
+        );
+    }
+    
+    private void setupEnemyAnimators() {
+
+        enemyAnimators.clear();
+
+        for (Enemy enemy : enemies) {
+
+            Animator animator = new Animator();
+
+            String type = enemy.getTypeName();
+
+            if (type.equals("slime")) {
+
+                animator.addClip(
+                        "idle",
+                        "/enemy/slime_idle_0.png",
+                        "/enemy/slime_idle_1.png",
+                        "/enemy/slime_idle_2.png"
+                );
+
+                animator.addClip(
+                        "attack_left",
+                        "/enemy/slime_attack_left_0.png",
+                        "/enemy/slime_attack_left_1.png"
+                );
+
+                animator.addClip(
+                        "attack_right",
+                        "/enemy/slime_attack_right_0.png",
+                        "/enemy/slime_attack_right_1.png"
+                );
+
+            } else if (type.equals("goblin")) {
+
+                animator.addClip(
+                        "walk_left",
+                        "/enemy/goblin_walk_left_0.png",
+                        "/enemy/goblin_walk_left_1.png"
+                );
+
+                animator.addClip(
+                        "walk_right",
+                        "/enemy/goblin_walk_right_0.png",
+                        "/enemy/goblin_walk_right_1.png"
+                );
+
+                animator.addClip(
+                        "attack_left",
+                        "/enemy/goblin_attack_left_0.png",
+                        "/enemy/goblin_attack_left_1.png"
+                );
+
+                animator.addClip(
+                        "attack_right",
+                        "/enemy/goblin_attack_right_0.png",
+                        "/enemy/goblin_attack_right_1.png"
+                );
+
+            } else if (type.equals("skeleton")) {
+
+                animator.addClip(
+                        "walk_down",
+                        "/enemy/skeleton_walk_down_0.png",
+                        "/enemy/skeleton_walk_down_1.png"
+                );
+
+                animator.addClip(
+                        "walk_up",
+                        "/enemy/skeleton_walk_up_0.png",
+                        "/enemy/skeleton_walk_up_1.png"
+                );
+
+                animator.addClip(
+                        "walk_left",
+                        "/enemy/skeleton_walk_left_0.png",
+                        "/enemy/skeleton_walk_left_1.png"
+                );
+
+                animator.addClip(
+                        "walk_right",
+                        "/enemy/skeleton_walk_right_0.png",
+                        "/enemy/skeleton_walk_right_1.png"
+                );
+
+                animator.addClip(
+                        "attack_down",
+                        "/enemy/skeleton_attack_down_0.png",
+                        "/enemy/skeleton_attack_down_1.png"
+                );
+
+                animator.addClip(
+                        "attack_up",
+                        "/enemy/skeleton_attack_up_0.png",
+                        "/enemy/skeleton_attack_up_1.png"
+                );
+
+                animator.addClip(
+                        "attack_left",
+                        "/enemy/skeleton_attack_left_0.png",
+                        "/enemy/skeleton_attack_left_1.png"
+                );
+
+                animator.addClip(
+                        "attack_right",
+                        "/enemy/skeleton_attack_right_0.png",
+                        "/enemy/skeleton_attack_right_1.png"
+                );
+            }
+
+            animator.setFrameSpeed(8);
+
+            enemyAnimators.put(enemy, animator);
+        }
     }
 
     //------------------------
@@ -260,15 +453,20 @@ public class GamePanel extends Pane {
     //------------------------
 
     private void update() {
-    	
-    		if (gameEnded) {
+
+        if (gameEnded) {
             return;
         }
-    		
-    		if (moveCooldown > 0) {
-    	        moveCooldown--;
-    	    }
 
+        Player player = gameManager.getPlayer();
+
+        if (player != null) {
+            player.setMoving(false);
+        }
+
+        if (moveCooldown > 0) {
+            moveCooldown--;
+        }
 
         if (attackCooldown > 0) {
             attackCooldown--;
@@ -277,7 +475,16 @@ public class GamePanel extends Pane {
         if (playerDamageCooldown > 0) {
             playerDamageCooldown--;
         }
-        
+
+        if (playerAttackTimer > 0) {
+
+            playerAttackTimer--;
+
+            if (playerAttackTimer == 0 && player != null) {
+                player.stopAttack();
+            }
+        }
+
         processInput();
 
         checkKeyCollection();
@@ -293,6 +500,151 @@ public class GamePanel extends Pane {
         checkPlayerDeath();
 
         checkBossDefeated();
+
+        updatePlayerAnimation();
+
+        updateEnemyAnimations();
+    }
+    
+    private void updatePlayerAnimation() {
+
+        Player player = gameManager.getPlayer();
+
+        if (player == null || playerAnimator == null) {
+            return;
+        }
+
+        String dir = getDirectionKey(player.getDirection());
+        String weapon = getWeaponKey(player.getWeaponName());
+
+        if (player.isAttacking()) {
+
+            playerAnimator.play(weapon + "_attack_" + dir, false);
+
+        } else {
+
+            playerAnimator.play(weapon + "_walk_" + dir, true);
+        }
+
+        playerAnimator.update();
+    }
+    
+    private void updateEnemyAnimations() {
+
+        for (Enemy enemy : enemies) {
+
+            Animator animator = enemyAnimators.get(enemy);
+
+            if (animator == null) {
+                continue;
+            }
+
+            String type = enemy.getTypeName();
+
+            if (type.equals("slime")) {
+
+                updateSlimeAnimation(enemy, animator);
+
+            } else if (type.equals("goblin")) {
+
+                updateGoblinAnimation(enemy, animator);
+
+            } else if (type.equals("skeleton")) {
+
+                updateSkeletonAnimation(enemy, animator);
+            }
+
+            animator.update();
+
+            if (enemy.isAttacking() && animator.isFinished()) {
+                enemy.stopAttack();
+            }
+        }
+    }
+    
+    private void updateSlimeAnimation(Enemy enemy, Animator animator) {
+
+        if (enemy.isAttacking()) {
+
+            String dir = getHorizontalDirectionKey(enemy.getDirection());
+
+            animator.play("attack_" + dir, false);
+
+        } else {
+
+            animator.play("idle", true);
+        }
+    }
+    
+    private void updateGoblinAnimation(Enemy enemy, Animator animator) {
+
+        String dir = getHorizontalDirectionKey(enemy.getDirection());
+
+        if (enemy.isAttacking()) {
+
+            animator.play("attack_" + dir, false);
+
+        } else {
+
+            animator.play("walk_" + dir, true);
+        }
+    }
+    
+    private void updateSkeletonAnimation(Enemy enemy, Animator animator) {
+
+        String dir = getDirectionKey(enemy.getDirection());
+
+        if (enemy.isAttacking()) {
+
+            animator.play("attack_" + dir, false);
+
+        } else {
+
+            animator.play("walk_" + dir, true);
+        }
+    }
+    
+    private String getDirectionKey(Player.Direction direction) {
+
+        if (direction == Player.Direction.UP) {
+            return "up";
+        }
+
+        if (direction == Player.Direction.DOWN) {
+            return "down";
+        }
+
+        if (direction == Player.Direction.LEFT) {
+            return "left";
+        }
+
+        return "right";
+    }
+    
+    private String getHorizontalDirectionKey(Player.Direction direction) {
+
+        if (direction == Player.Direction.LEFT) {
+            return "left";
+        }
+
+        return "right";
+    }
+    
+    private String getWeaponKey(String weaponName) {
+
+        if (weaponName == null) {
+            return "wood";
+        }
+
+        if (weaponName.equalsIgnoreCase("Iron Sword")) {
+            return "iron";
+        }
+
+        if (weaponName.equalsIgnoreCase("Diamond Sword")) {
+            return "diamond";
+        }
+
+        return "wood";
     }
 
     //------------------------
@@ -332,7 +684,11 @@ public class GamePanel extends Pane {
             return;
         }
 
-        attackCooldown = 12;
+        attackCooldown = 16;
+
+        player.startAttack();
+
+        playerAttackTimer = PLAYER_ATTACK_DURATION;
 
         for (int i = enemies.size() - 1; i >= 0; i--) {
 
@@ -345,28 +701,15 @@ public class GamePanel extends Pane {
 
                 enemy.takeDamage(player.getDamage());
 
-                System.out.println(
-                        "Enemy hit! Damage: "
-                                + player.getDamage()
-                                + " Enemy HP: "
-                                + enemy.getHp()
-                                + "/"
-                                + enemy.getMaxHp()
-                );
-
                 if (enemy.isDead()) {
 
                     player.addKill();
 
                     player.addCoins(enemy.getCoinReward());
 
-                    enemies.remove(i);
+                    enemyAnimators.remove(enemy);
 
-                    System.out.println(
-                            "Enemy defeated! +"
-                                    + enemy.getCoinReward()
-                                    + " coins"
-                    );
+                    enemies.remove(i);
                 }
 
                 return;
@@ -394,17 +737,51 @@ public class GamePanel extends Pane {
             if (enemy.getRow() == player.getRow()
                     && enemy.getCol() == player.getCol()) {
 
+                faceEnemyToPlayer(enemy, player);
+
+                enemy.startAttack();
+
                 player.takeDamage(enemy.getDamage());
 
-                playerDamageCooldown = 45;
-
-                System.out.println(
-                        "Player damaged! -"
-                                + enemy.getDamage()
-                                + " HP"
-                );
+                playerDamageCooldown = 60;
 
                 return;
+            }
+        }
+    }
+    
+    private void faceEnemyToPlayer(Enemy enemy, Player player) {
+
+        String type = enemy.getTypeName();
+
+        int rowDiff = player.getRow() - enemy.getRow();
+        int colDiff = player.getCol() - enemy.getCol();
+
+        if (type.equals("slime") || type.equals("goblin")) {
+
+            if (colDiff < 0) {
+                enemy.setDirection(Player.Direction.LEFT);
+            } else if (colDiff > 0) {
+                enemy.setDirection(Player.Direction.RIGHT);
+            }
+
+            return;
+        }
+
+        if (Math.abs(rowDiff) > Math.abs(colDiff)) {
+
+            if (rowDiff < 0) {
+                enemy.setDirection(Player.Direction.UP);
+            } else if (rowDiff > 0) {
+                enemy.setDirection(Player.Direction.DOWN);
+            }
+
+        } else {
+
+            if (colDiff < 0) {
+                enemy.setDirection(Player.Direction.LEFT);
+            } else if (colDiff > 0) {
+                enemy.setDirection(Player.Direction.RIGHT);
             }
         }
     }
@@ -554,8 +931,6 @@ public class GamePanel extends Pane {
 
         mapRenderer.render();
 
-        drawItems();
-
         drawEnemies();
 
         drawPlayer();
@@ -575,20 +950,23 @@ public class GamePanel extends Pane {
             return;
         }
 
-        int x = player.getCol() * TILE_SIZE;
+        int x = player.getCol() * TILE_SIZE - SPRITE_OFFSET;
+        int y = player.getRow() * TILE_SIZE - SPRITE_OFFSET;
 
-        int y = player.getRow() * TILE_SIZE;
+        Image frame = null;
 
-        Image sprite = getPlayerSprite(player);
+        if (playerAnimator != null) {
+            frame = playerAnimator.getCurrentFrame();
+        }
 
-        if (sprite != null) {
+        if (frame != null) {
 
             gc.drawImage(
-                    sprite,
+                    frame,
                     x,
                     y,
-                    TILE_SIZE,
-                    TILE_SIZE
+                    SPRITE_SIZE,
+                    SPRITE_SIZE
             );
 
         } else {
@@ -596,8 +974,8 @@ public class GamePanel extends Pane {
             gc.setFill(Color.DODGERBLUE);
 
             gc.fillOval(
-                    x + 8,
-                    y + 8,
+                    player.getCol() * TILE_SIZE + 8,
+                    player.getRow() * TILE_SIZE + 8,
                     TILE_SIZE - 16,
                     TILE_SIZE - 16
             );
@@ -648,18 +1026,54 @@ public class GamePanel extends Pane {
 
         for (Enemy enemy : enemies) {
 
-            double x = enemy.getSprite().getX();
-            double y = enemy.getSprite().getY();
+            int x = enemy.getCol() * TILE_SIZE - SPRITE_OFFSET;
+            int y = enemy.getRow() * TILE_SIZE - SPRITE_OFFSET;
 
-            gc.drawImage(
-                    enemy.getSprite().getImage(),
-                    x,
-                    y,
-                    TILE_SIZE,
-                    TILE_SIZE
+            Animator animator = enemyAnimators.get(enemy);
+
+            Image frame = null;
+
+            if (animator != null) {
+                frame = animator.getCurrentFrame();
+            }
+
+            if (frame != null) {
+
+                gc.drawImage(
+                        frame,
+                        x,
+                        y,
+                        SPRITE_SIZE,
+                        SPRITE_SIZE
+                );
+
+            } else if (enemy.getSprite().getImage() != null) {
+
+                gc.drawImage(
+                        enemy.getSprite().getImage(),
+                        x,
+                        y,
+                        SPRITE_SIZE,
+                        SPRITE_SIZE
+                );
+
+            } else {
+
+                gc.setFill(Color.RED);
+
+                gc.fillOval(
+                        enemy.getCol() * TILE_SIZE + 8,
+                        enemy.getRow() * TILE_SIZE + 8,
+                        TILE_SIZE - 16,
+                        TILE_SIZE - 16
+                );
+            }
+
+            drawEnemyHealthBar(
+                    enemy,
+                    enemy.getCol() * TILE_SIZE,
+                    enemy.getRow() * TILE_SIZE
             );
-
-            drawEnemyHealthBar(enemy, x, y);
         }
     }
     
@@ -685,16 +1099,6 @@ public class GamePanel extends Pane {
                 barWidth * hpRatio,
                 barHeight
         );
-    }
-
-    //------------------------
-    // 绘制道具
-    //------------------------
-
-    private void drawItems() {
-
-        // 钥匙已经在 MapRenderer 里面画了
-        // 所以这里暂时不用写
     }
 
     //------------------------

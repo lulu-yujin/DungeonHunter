@@ -53,7 +53,8 @@ public class Player {
     private String spriteDown;
     private String spriteLeft;
     private String spriteRight;
-
+    
+    private boolean attacking;
     private boolean moving;
 
     public Player() {
@@ -103,10 +104,33 @@ public class Player {
     }
 
     public void move(Direction direction) {
+    	
         this.direction = direction;
+        
         this.row += direction.getDRow();
         this.col += direction.getDCol();
+        
         this.moving = true;
+    }
+    
+    public boolean isAttacking() {
+        return attacking;
+    }
+
+    public void startAttack() {
+        attacking = true;
+    }
+
+    public void stopAttack() {
+        attacking = false;
+    }
+
+    public boolean isMoving() {
+        return moving;
+    }
+
+    public void setMoving(boolean moving) {
+        this.moving = moving;
     }
 
     public void face(Direction direction) {
@@ -119,10 +143,6 @@ public class Player {
 
     public void stopMoving() {
         this.moving = false;
-    }
-
-    public boolean isMoving() {
-        return moving;
     }
 
     public String getCurrentSpritePath() {

@@ -3,6 +3,7 @@ package enemy;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import map.MazeMap;
+import player.Player;
 
 public abstract class Enemy {
 
@@ -20,9 +21,16 @@ public abstract class Enemy {
     protected int damage;
     protected int coinReward;
 
+    protected String typeName;
+
+    protected Player.Direction direction = Player.Direction.RIGHT;
+
+    protected boolean attacking = false;
+
     public Enemy(
             int row,
             int col,
+            String typeName,
             String imagePath,
             MazeMap mazeMap,
             int maxHp,
@@ -31,6 +39,7 @@ public abstract class Enemy {
     ) {
         this.row = row;
         this.col = col;
+        this.typeName = typeName;
         this.mazeMap = mazeMap;
 
         this.maxHp = maxHp;
@@ -38,11 +47,15 @@ public abstract class Enemy {
         this.damage = damage;
         this.coinReward = coinReward;
 
-        Image image = new Image(
-                getClass().getResourceAsStream(imagePath)
-        );
+        var stream = getClass().getResourceAsStream(imagePath);
 
-        sprite = new ImageView(image);
+        if (stream != null) {
+            Image image = new Image(stream);
+            sprite = new ImageView(image);
+        } else {
+            System.err.println("[Enemy] Cannot load image: " + imagePath);
+            sprite = new ImageView();
+        }
 
         sprite.setFitWidth(TILE_SIZE);
         sprite.setFitHeight(TILE_SIZE);
@@ -80,7 +93,32 @@ public abstract class Enemy {
         return coinReward;
     }
 
+    public String getTypeName() {
+        return typeName;
+    }
+
+    public Player.Direction getDirection() {
+        return direction;
+    }
+
+    public void setDirection(Player.Direction direction) {
+        this.direction = direction;
+    }
+
+    public boolean isAttacking() {
+        return attacking;
+    }
+
+    public void startAttack() {
+        attacking = true;
+    }
+
+    public void stopAttack() {
+        attacking = false;
+    }
+
     public void takeDamage(int amount) {
+
         hp -= amount;
 
         if (hp < 0) {
@@ -99,5 +137,18 @@ public abstract class Enemy {
     protected void updateViewPosition() {
         sprite.setX(col * TILE_SIZE);
         sprite.setY(row * TILE_SIZE);
+    }
+
+    protected void setDirectionByDelta(int dRow, int dCol) {
+
+        if (dRow < 0) {
+            direction = Player.Direction.UP;
+        } else if (dRow > 0) {
+            direction = Player.Direction.DOWN;
+        } else if (dCol < 0) {
+            direction = Player.Direction.LEFT;
+        } else if (dCol > 0) {
+            direction = Player.Direction.RIGHT;
+        }
     }
 }
