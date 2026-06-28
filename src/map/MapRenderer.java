@@ -81,9 +81,9 @@ public class MapRenderer {
     private void loadSprites() {
         floorSprite    = loadImage("/map/floor.png");
         wallSprite     = loadImage("/map/wall.png");
-        spawnSprite    = loadImage("/map/spawn.png");
-        exitSprite     = loadImage("/map/exit.png");
-        portalSprite   = loadImage("/map/portal.png");   //通道
+        spawnSprite    = loadImage("/map/door.png");
+        exitSprite     = loadImage("/map/door.png");
+        portalSprite   = loadImage("/map/door.png");   //通道
         beginnerSprite = loadImage("/map/floor.png");
         advancedSprite = loadImage("/map/floor.png");
         bossSprite     = loadImage("/map/floor.png");
@@ -169,19 +169,25 @@ public class MapRenderer {
                         break;
                         
                     case MazeMap.KEY:
-                        int keySize = 24;
-                        int offset = (TILE_SIZE - keySize) / 2;
-                        // 先绘制地砖底色
-                        drawTile(null, COLOR_KEY, px, py, ts);
-                        // 再居中绘制钥匙图片
+                        // 1. 先绘制地砖背景图片（铺满整个 TILE_SIZE）
+                        // 假设你的地砖图片变量名叫 floorSprite，直接调用 gc.drawImage 绘制背景
+                        gc.drawImage(
+                            floorSprite, 
+                            px, 
+                            py, 
+                            TILE_SIZE, 
+                            TILE_SIZE
+                        );
+                        
+                        // 2. 再绘制钥匙图片，同样铺满整个 TILE_SIZE
                         gc.drawImage(
                             keySprite,
-                            px + offset,
-                            py + offset,
-                            keySize,
-                            keySize
+                            px,
+                            py,
+                            TILE_SIZE,
+                            TILE_SIZE
                         );
-                        break;   
+                        break;  
 
                     default: // '.' 普通地板 / generic floor
                         drawTile(floorSprite, COLOR_FLOOR, px, py, ts);

@@ -74,7 +74,7 @@ class Goblin extends Enemy {
 class Skeleton extends Enemy {
 
     public Skeleton(int row, int col, MazeMap mazeMap) {
-        super(row, col, "skeleton", "/enemy/skeleton.png", mazeMap, 120, 15, 100);
+        super(row, col, "skeleton", "/enemy/skeleton.png", mazeMap, 120, 15, 0);
     }
 
     @Override

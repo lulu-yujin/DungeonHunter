@@ -37,6 +37,6 @@ public class Weapon {
     }
 
     public static Weapon diamondSword() {
-        return new Weapon("Diamond Sword", 45, 300);
+        return new Weapon("Diamond Sword", 45, 180);
     }
 }
