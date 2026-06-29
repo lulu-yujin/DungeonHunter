@@ -1,8 +1,26 @@
 package player;
 
+/**
+ * Stores player data and handles player-related behaviours,
+ * including movement, health, attack, coins, weapons and keys.
+ */
 public class Player {
 
+    // ================= Constants =================
+
+    private static final int DEFAULT_ROW = 1;
+    private static final int DEFAULT_COL = 1;
+
+    private static final int DEFAULT_MAX_HP = 100;
+    private static final int DEFAULT_DAMAGE = 10;
+    private static final String DEFAULT_WEAPON = "Wooden Sword";
+
+    private static final int REQUIRED_KEYS = 3;
+
+    // ================= Direction Enum =================
+
     public enum Direction {
+
         UP(-1, 0),
         DOWN(1, 0),
         LEFT(0, -1),
@@ -25,63 +43,53 @@ public class Player {
         }
     }
 
-    public enum PlayerAction {
-    	    NONE,
-        PICK_KEY,
-        NEED_KEY,
-        NEXT_LEVEL,
-        WIN
-    }
+    // ================= Position =================
 
     private int row;
     private int col;
+
+    // ================= Player Stats =================
 
     private int maxHp;
     private int hp;
     private int coins;
     private int damage;
     private int kills;
+    private int keyCount;
+
+    // ================= Equipment =================
 
     private String weaponName;
-    private Direction direction;
-    private int keyCount;
-    private int walkFrameIndex = 0;
-    private static final int REQUIRED_KEYS = 3;
 
-    // Player image path placeholders
-    // The actual image files can be placed in res/player
-    private String spriteUp;
-    private String spriteDown;
-    private String spriteLeft;
-    private String spriteRight;
-    
+    // ================= State =================
+
+    private Direction direction;
+
     private boolean attacking;
     private boolean moving;
 
+    private int walkFrameIndex;
+
+    // ================= Constructor =================
+
     public Player() {
-        this(1, 1);
+        this(DEFAULT_ROW, DEFAULT_COL);
     }
 
     public Player(int row, int col) {
+
         this.row = row;
         this.col = col;
 
-        this.maxHp = 100;
-        this.hp = 100;
-        this.coins = 0;
-        this.damage = 10;
-        this.kills = 0;
-        this.keyCount = 0;
+        resetStats();
 
-        this.weaponName = "Wooden Sword";
         this.direction = Direction.DOWN;
+        this.attacking = false;
         this.moving = false;
-
-        this.spriteUp = "/player/player.png";
-        this.spriteDown = "/player/player.png";
-        this.spriteLeft = "/player/player.png";
-        this.spriteRight = "/player/player.png";
+        this.walkFrameIndex = 0;
     }
+
+    // ================= Position and Movement =================
 
     public int getRow() {
         return row;
@@ -92,6 +100,7 @@ public class Player {
     }
 
     public void setPosition(int row, int col) {
+
         this.row = row;
         this.col = col;
     }
@@ -105,17 +114,47 @@ public class Player {
     }
 
     public void move(Direction direction) {
-    	
+
         this.direction = direction;
-        
+
         this.row += direction.getDRow();
         this.col += direction.getDCol();
-        
+
         this.moving = true;
-        
+
         nextWalkFrame();
     }
-    
+
+    public void face(Direction direction) {
+        this.direction = direction;
+    }
+
+    public Direction getDirection() {
+        return direction;
+    }
+
+    public boolean isMoving() {
+        return moving;
+    }
+
+    public void setMoving(boolean moving) {
+        this.moving = moving;
+    }
+
+    public void stopMoving() {
+        this.moving = false;
+    }
+
+    // ================= Animation State =================
+
+    public int getWalkFrameIndex() {
+        return walkFrameIndex;
+    }
+
+    public void nextWalkFrame() {
+        walkFrameIndex++;
+    }
+
     public boolean isAttacking() {
         return attacking;
     }
@@ -127,83 +166,33 @@ public class Player {
     public void stopAttack() {
         attacking = false;
     }
-    
-    public int getWalkFrameIndex() {
-        return walkFrameIndex;
-    }
 
-    public void nextWalkFrame() {
-        walkFrameIndex++;
-    }
+    // ================= Attack Logic =================
 
-    public boolean isMoving() {
-        return moving;
-    }
-
-    public void setMoving(boolean moving) {
-        this.moving = moving;
-    }
-
-    public void face(Direction direction) {
-        this.direction = direction;
-    }
-
-    public Direction getDirection() {
-        return direction;
-    }
-
-    public void stopMoving() {
-        this.moving = false;
-    }
-
-    public String getCurrentSpritePath() {
-        if (direction == Direction.UP) {
-            return spriteUp;
-        } else if (direction == Direction.DOWN) {
-            return spriteDown;
-        } else if (direction == Direction.LEFT) {
-            return spriteLeft;
-        } else if (direction == Direction.RIGHT) {
-            return spriteRight;
-        }
-
-        return spriteDown;
-    }
-
-    public void setSpriteUp(String spriteUp) {
-        this.spriteUp = spriteUp;
-    }
-
-    public void setSpriteDown(String spriteDown) {
-        this.spriteDown = spriteDown;
-    }
-
-    public void setSpriteLeft(String spriteLeft) {
-        this.spriteLeft = spriteLeft;
-    }
-
-    public void setSpriteRight(String spriteRight) {
-        this.spriteRight = spriteRight;
-    }
-
-    public void setSprites(String up, String down, String left, String right) {
-        this.spriteUp = up;
-        this.spriteDown = down;
-        this.spriteLeft = left;
-        this.spriteRight = right;
-    }
-
+    /**
+     * Returns the row of the tile directly in front of the player.
+     */
     public int getAttackRow() {
         return row + direction.getDRow();
     }
 
+    /**
+     * Returns the column of the tile directly in front of the player.
+     */
     public int getAttackCol() {
         return col + direction.getDCol();
     }
 
+    /**
+     * The player can only hit an enemy standing in the tile directly in front.
+     */
     public boolean isEnemyInAttackRange(int enemyRow, int enemyCol) {
-        return enemyRow == getAttackRow() && enemyCol == getAttackCol();
+
+        return enemyRow == getAttackRow()
+                && enemyCol == getAttackCol();
     }
+
+    // ================= Health =================
 
     public int getMaxHp() {
         return maxHp;
@@ -214,18 +203,20 @@ public class Player {
     }
 
     public void takeDamage(int damage) {
-        this.hp -= damage;
 
-        if (this.hp < 0) {
-            this.hp = 0;
+        hp -= damage;
+
+        if (hp < 0) {
+            hp = 0;
         }
     }
 
     public void heal(int amount) {
-        this.hp += amount;
 
-        if (this.hp > maxHp) {
-            this.hp = maxHp;
+        hp += amount;
+
+        if (hp > maxHp) {
+            hp = maxHp;
         }
     }
 
@@ -233,28 +224,35 @@ public class Player {
         return hp <= 0;
     }
 
+    // ================= Coins =================
+
     public int getCoins() {
         return coins;
     }
 
     public void addCoins(int amount) {
+
         if (amount > 0) {
-            this.coins += amount;
+            coins += amount;
         }
     }
 
     public boolean spendCoins(int amount) {
+
         if (amount <= 0) {
             return true;
         }
 
         if (coins >= amount) {
+
             coins -= amount;
             return true;
         }
 
         return false;
     }
+
+    // ================= Weapon =================
 
     public String getWeaponName() {
         return weaponName;
@@ -265,12 +263,15 @@ public class Player {
     }
 
     public void setWeapon(String weaponName, int damage) {
+
         this.weaponName = weaponName;
         this.damage = damage;
     }
 
     public boolean buyWeapon(String weaponName, int price, int damage) {
+
         if (spendCoins(price)) {
+
             setWeapon(weaponName, damage);
             return true;
         }
@@ -279,13 +280,17 @@ public class Player {
     }
 
     public boolean buyHealthPotion(int price, int healAmount) {
+
         if (spendCoins(price)) {
+
             heal(healAmount);
             return true;
         }
 
         return false;
     }
+
+    // ================= Kills =================
 
     public int getKills() {
         return kills;
@@ -294,7 +299,9 @@ public class Player {
     public void addKill() {
         kills++;
     }
-    
+
+    // ================= Keys =================
+
     public int getKeyCount() {
         return keyCount;
     }
@@ -316,55 +323,58 @@ public class Player {
     }
 
     public boolean useKeysForNextLevel() {
+
         if (hasEnoughKeys()) {
+
             keyCount = 0;
             return true;
         }
 
         return false;
     }
-    
-    public PlayerAction checkCurrentTile(char tile) {
-        if (tile == 'K') {
-            pickUpKey();
-            return PlayerAction.PICK_KEY;
-        }
 
-        if (tile == 'T') {
-            if (hasEnoughKeys()) {
-                return PlayerAction.NEXT_LEVEL;
-            } else {
-                return PlayerAction.NEED_KEY;
-            }
-        }
+    // ================= Reset Methods =================
 
-        if (tile == 'E') {
-            return PlayerAction.WIN;
-        }
-
-        return PlayerAction.NONE;
-    }
-
+    /**
+     * Resets only the position and temporary state when entering a new level.
+     */
     public void resetToSpawn(int row, int col) {
+
         setPosition(row, col);
-        this.direction = Direction.DOWN;
-        this.moving = false;
-        this.keyCount = 0;
+
+        direction = Direction.DOWN;
+        attacking = false;
+        moving = false;
+        walkFrameIndex = 0;
+
+        keyCount = 0;
     }
 
+    /**
+     * Resets all player data when starting a new game.
+     */
     public void resetForNewGame(int row, int col) {
+
         this.row = row;
         this.col = col;
 
-        this.maxHp = 100;
-        this.hp = 100;
-        this.coins = 0;
-        this.damage = 10;
-        this.kills = 0;
+        resetStats();
 
-        this.weaponName = "Wooden Sword";
-        this.direction = Direction.DOWN;
-        this.moving = false;
-        this.keyCount = 0;
+        direction = Direction.DOWN;
+        attacking = false;
+        moving = false;
+        walkFrameIndex = 0;
+    }
+
+    private void resetStats() {
+
+        maxHp = DEFAULT_MAX_HP;
+        hp = DEFAULT_MAX_HP;
+        coins = 0;
+        damage = DEFAULT_DAMAGE;
+        kills = 0;
+        keyCount = 0;
+
+        weaponName = DEFAULT_WEAPON;
     }
 }

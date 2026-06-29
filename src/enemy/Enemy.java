@@ -1,32 +1,51 @@
 package enemy;
 
+import java.io.InputStream;
+
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import map.MazeMap;
 import player.Player;
 
+/**
+ * Abstract parent class for all enemies.
+ * It stores common enemy data such as position, HP, damage, direction and attack state.
+ */
 public abstract class Enemy {
+
+    // ================= Constants =================
+
+    public static final int TILE_SIZE = 48;
+
+    // ================= Position and Map =================
 
     protected int row;
     protected int col;
 
-    public static final int TILE_SIZE = 48;
+    protected MazeMap mazeMap;
+
+    // ================= Display =================
 
     protected ImageView sprite;
 
-    protected MazeMap mazeMap;
+    // ================= Combat Data =================
 
     protected int maxHp;
     protected int hp;
     protected int damage;
     protected int coinReward;
-    protected int walkFrameIndex = 0;
+
+    // ================= Enemy Type and Animation State =================
 
     protected String typeName;
 
     protected Player.Direction direction = Player.Direction.RIGHT;
 
     protected boolean attacking = false;
+
+    protected int walkFrameIndex = 0;
+
+    // ================= Constructor =================
 
     public Enemy(
             int row,
@@ -48,27 +67,40 @@ public abstract class Enemy {
         this.damage = damage;
         this.coinReward = coinReward;
 
-        var stream = getClass().getResourceAsStream(imagePath);
+        loadSprite(imagePath);
+
+        updateViewPosition();
+    }
+
+    // ================= Abstract Behaviour =================
+
+    /**
+     * Each enemy type has its own movement behaviour.
+     */
+    public abstract void move();
+
+    // ================= Sprite Loading =================
+
+    private void loadSprite(String imagePath) {
+
+        InputStream stream = getClass().getResourceAsStream(imagePath);
 
         if (stream != null) {
+
             Image image = new Image(stream);
             sprite = new ImageView(image);
+
         } else {
+
             System.err.println("[Enemy] Cannot load image: " + imagePath);
             sprite = new ImageView();
         }
 
         sprite.setFitWidth(TILE_SIZE);
         sprite.setFitHeight(TILE_SIZE);
-
-        updateViewPosition();
     }
 
-    public abstract void move();
-
-    public ImageView getSprite() {
-        return sprite;
-    }
+    // ================= Position Getters =================
 
     public int getRow() {
         return row;
@@ -77,6 +109,12 @@ public abstract class Enemy {
     public int getCol() {
         return col;
     }
+
+    public ImageView getSprite() {
+        return sprite;
+    }
+
+    // ================= Combat Getters =================
 
     public int getMaxHp() {
         return maxHp;
@@ -94,16 +132,10 @@ public abstract class Enemy {
         return coinReward;
     }
 
+    // ================= Type and Direction =================
+
     public String getTypeName() {
         return typeName;
-    }
-    
-    public int getWalkFrameIndex() {
-        return walkFrameIndex;
-    }
-
-    protected void nextWalkFrame() {
-        walkFrameIndex++;
     }
 
     public Player.Direction getDirection() {
@@ -112,6 +144,16 @@ public abstract class Enemy {
 
     public void setDirection(Player.Direction direction) {
         this.direction = direction;
+    }
+
+    // ================= Animation State =================
+
+    public int getWalkFrameIndex() {
+        return walkFrameIndex;
+    }
+
+    protected void nextWalkFrame() {
+        walkFrameIndex++;
     }
 
     public boolean isAttacking() {
@@ -126,6 +168,11 @@ public abstract class Enemy {
         attacking = false;
     }
 
+    // ================= Combat Methods =================
+
+    /**
+     * Reduces enemy HP when it is hit by the player.
+     */
     public void takeDamage(int amount) {
 
         hp -= amount;
@@ -139,15 +186,26 @@ public abstract class Enemy {
         return hp <= 0;
     }
 
+    // ================= Movement Helpers =================
+
+    /**
+     * Checks whether the enemy can move to the target tile.
+     */
     protected boolean canMoveTo(int nextRow, int nextCol) {
         return mazeMap != null && mazeMap.isWalkable(nextRow, nextCol);
     }
 
+    /**
+     * Updates the JavaFX sprite position according to the enemy's grid position.
+     */
     protected void updateViewPosition() {
         sprite.setX(col * TILE_SIZE);
         sprite.setY(row * TILE_SIZE);
     }
 
+    /**
+     * Updates enemy direction based on movement change.
+     */
     protected void setDirectionByDelta(int dRow, int dCol) {
 
         if (dRow < 0) {

@@ -1,110 +1,98 @@
 package ui;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
-import javafx.scene.input.KeyCode;
+
+import animation.Animator;
+import enemy.Enemy;
+import enemy.EnemyType;
+import game.GameManager;
 import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.application.Platform;
-import animation.Animator;
-import javafx.scene.image.Image;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import game.GameManager;
-import map.*;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import map.MapRenderer;
+import map.MazeMap;
+import map.Tile;
 import player.Player;
-import enemy.*;
 
+/**
+ * Main game panel.
+ * It connects map rendering, player control, enemies, animation, input and HUD drawing.
+ */
 public class GamePanel extends Pane {
 
-    //------------------------
-    // 基础配置
-    //------------------------
+    // ================= Constants =================
 
     public static final int TILE_SIZE = Tile.TILE_SIZE;
 
-    private final int SCREEN_WIDTH =
-            MazeMap.COLS * TILE_SIZE;
+    private static final int SCREEN_WIDTH = MazeMap.COLS * TILE_SIZE;
+    private static final int SCREEN_HEIGHT = MazeMap.ROWS * TILE_SIZE;
 
-    private final int SCREEN_HEIGHT =
-            MazeMap.ROWS * TILE_SIZE;
+    private static final int MOVE_COOLDOWN_FRAMES = 8;
+    private static final int ATTACK_COOLDOWN_FRAMES = 16;
+    private static final int PLAYER_ATTACK_DURATION = 18;
+    private static final int PLAYER_DAMAGE_COOLDOWN_FRAMES = 60;
+    private static final int ENEMY_MOVE_INTERVAL = 30;
 
-    //------------------------
-    // 核心对象
-    //------------------------
+    private static final int SPRITE_SIZE = 64;
+    private static final int SKELETON_SPRITE_SIZE = 80;
 
-    private GameManager gameManager;
+    private static final int PLAYER_HIT_FLASH_DURATION = 25;
+
+    private static final int HUD_X = 10;
+    private static final int HUD_Y = 10;
+    private static final int HUD_WIDTH = 430;
+    private static final int HUD_HEIGHT = 95;
+
+    // ================= Core Objects =================
+
+    private final GameManager gameManager;
 
     private Canvas canvas;
-
     private GraphicsContext gc;
-    
-    //动画
+
+    private MazeMap mazeMap;
+    private MapRenderer mapRenderer;
+
+    // ================= Player and Enemy Systems =================
+
+    private ArrayList<Enemy> enemies = new ArrayList<>();
+
+    // ================= Animation =================
+
     private Animator playerAnimator;
 
     private Map<Enemy, Animator> enemyAnimators = new HashMap<>();
 
     private int playerAttackTimer = 0;
+    private int playerHitFlashTimer = 0;
 
-    private static final int PLAYER_ATTACK_DURATION = 18;
+    // ================= Input and Cooldowns =================
 
-    private static final int SPRITE_SIZE = 64;
-    private static final int SPRITE_OFFSET = (SPRITE_SIZE - TILE_SIZE) / 2;
-    
-    private int getEnemySpriteSize(Enemy enemy) {
-
-        if (enemy.getTypeName().equals("skeleton")) {
-            return 80;
-        }
-
-        return SPRITE_SIZE;
-    }
-    //------------------------
-    // 地图系统
-    //------------------------
-
-    private MazeMap mazeMap;
-
-    private MapRenderer mapRenderer;
-    
-    //怪物
-    private ArrayList<Enemy> enemies = new ArrayList<>();
-    
     private Set<KeyCode> pressedKeys = new HashSet<>();
 
     private int moveCooldown = 0;
-
-    private int enemyMoveCounter = 0;
-    
     private int attackCooldown = 0;
-    
     private int playerDamageCooldown = 0;
+    private int enemyMoveCounter = 0;
 
-    //------------------------
-    // 游戏循环
-    //------------------------
+    // ================= Game Loop =================
 
     private AnimationTimer gameLoop;
+
     private boolean gameEnded = false;
 
-    //------------------------
-    // 玩家贴图缓存
-    //------------------------
-
-    private Image playerSprite;
-
-    private String currentPlayerSpritePath;
-
-    //------------------------
-    // 构造器
-    //------------------------
+    // ================= Constructor =================
 
     public GamePanel(GameManager gameManager) {
 
@@ -116,12 +104,10 @@ public class GamePanel extends Pane {
 
         setupGameLoop();
 
-        Platform.runLater(() -> requestFocus());
+        Platform.runLater(this::requestFocus);
     }
 
-    //------------------------
-    // Canvas
-    //------------------------
+    // ================= Setup Methods =================
 
     private void setupCanvas() {
 
@@ -135,10 +121,6 @@ public class GamePanel extends Pane {
         getChildren().add(canvas);
     }
 
-    //------------------------
-    // 地图系统
-    //------------------------
-
     private void setupMap() {
 
         mazeMap = new MazeMap();
@@ -149,73 +131,58 @@ public class GamePanel extends Pane {
         );
 
         spawnPlayer();
-        
+
         spawnEnemies();
-        
+
         setupPlayerAnimator();
 
         setupEnemyAnimators();
     }
-    
-    private void spawnEnemies() {
 
-        enemies.clear();
+    private void setupGameLoop() {
 
-        int level = mazeMap.getCurrentLevel();
+        gameLoop = new AnimationTimer() {
 
-        if (level == 1) {
+            @Override
+            public void handle(long now) {
 
-            spawnEnemiesFromChar(MazeMap.BEGINNER, "slime");
+                update();
 
-        } else if (level == 2) {
-
-            spawnEnemiesFromChar(MazeMap.ADVANCED, "goblin");
-
-        } else if (level == 3) {
-
-            int centerRow = MazeMap.ROWS / 2;
-            int centerCol = MazeMap.COLS / 2;
-
-            enemies.add(
-                    EnemyType.createSkeleton(centerRow, centerCol, mazeMap)
-            );
-        }
-    }
-    
-    private void spawnEnemiesFromChar(char spawnChar, String enemyName) {
-
-        char[][] map = mazeMap.getMap();
-
-        for (int r = 0; r < MazeMap.ROWS; r++) {
-            for (int c = 0; c < MazeMap.COLS; c++) {
-
-                if (map[r][c] == spawnChar) {
-
-                    if (enemyName.equals("slime")) {
-
-                        enemies.add(
-                                EnemyType.createSlime(r, c, mazeMap)
-                        );
-
-                    } else if (enemyName.equals("goblin")) {
-
-                        enemies.add(
-                                EnemyType.createGoblin(r, c, mazeMap)
-                        );
-                    }
-                }
+                draw();
             }
+        };
+    }
+
+    // ================= Game Loop Control =================
+
+    public void startGameLoop() {
+
+        if (gameLoop != null) {
+            gameLoop.start();
         }
     }
-    
 
-    //------------------------
-    // 切换地图
-    //------------------------
+    public void stopGameLoop() {
+
+        if (gameLoop != null) {
+            gameLoop.stop();
+        }
+    }
+
+    // ================= Map and Level =================
 
     public void loadMap(int level) {
 
         mazeMap.loadLevel(level);
+
+        clearInputState();
+
+        moveCooldown = 0;
+        attackCooldown = 0;
+        playerDamageCooldown = 0;
+        enemyMoveCounter = 0;
+        playerAttackTimer = 0;
+        playerHitFlashTimer = 0;
 
         spawnPlayer();
 
@@ -225,8 +192,81 @@ public class GamePanel extends Pane {
 
         requestFocus();
     }
-    
-    //动画加载
+
+    public void spawnPlayer() {
+
+        Player player = gameManager.getPlayer();
+
+        if (player == null) {
+            return;
+        }
+
+        int[] spawn = mazeMap.getSpawnPoint();
+
+        player.resetToSpawn(
+                spawn[0],
+                spawn[1]
+        );
+    }
+
+    private void spawnEnemies() {
+
+        enemies.clear();
+
+        int level = mazeMap.getCurrentLevel();
+
+        if (level == 1) {
+
+            spawnEnemiesFromChar(MazeMap.BEGINNER);
+
+        } else if (level == 2) {
+
+            spawnEnemiesFromChar(MazeMap.ADVANCED);
+
+        } else if (level == 3) {
+
+            spawnBoss();
+        }
+    }
+
+    private void spawnEnemiesFromChar(char spawnChar) {
+
+        char[][] map = mazeMap.getMap();
+
+        for (int row = 0; row < MazeMap.ROWS; row++) {
+            for (int col = 0; col < MazeMap.COLS; col++) {
+
+                if (map[row][col] == spawnChar) {
+
+                    if (spawnChar == MazeMap.BEGINNER) {
+
+                        enemies.add(
+                                EnemyType.createSlime(row, col, mazeMap)
+                        );
+
+                    } else if (spawnChar == MazeMap.ADVANCED) {
+
+                        enemies.add(
+                                EnemyType.createGoblin(row, col, mazeMap)
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    private void spawnBoss() {
+
+        int centerRow = MazeMap.ROWS / 2;
+        int centerCol = MazeMap.COLS / 2;
+
+        enemies.add(
+                EnemyType.createSkeleton(centerRow, centerCol, mazeMap)
+        );
+    }
+
+    // ================= Player Animation Setup =================
+
     private void setupPlayerAnimator() {
 
         playerAnimator = new Animator();
@@ -237,7 +277,7 @@ public class GamePanel extends Pane {
 
         playerAnimator.setFrameSpeed(8);
     }
-    
+
     private void addPlayerWeaponClips(String weapon) {
 
         playerAnimator.addClip(
@@ -284,7 +324,9 @@ public class GamePanel extends Pane {
                 "/player/player_" + weapon + "_attack_right_0.png"
         );
     }
-    
+
+    // ================= Enemy Animation Setup =================
+
     private void setupEnemyAnimators() {
 
         enemyAnimators.clear();
@@ -297,100 +339,15 @@ public class GamePanel extends Pane {
 
             if (type.equals("slime")) {
 
-                animator.addClip(
-                        "idle",
-                        "/enemy/slime_idle_0.png",
-                        "/enemy/slime_idle_1.png",
-                        "/enemy/slime_idle_2.png"
-                );
-
-                animator.addClip(
-                        "attack_left",
-                        "/enemy/slime_attack_left_0.png",
-                        "/enemy/slime_attack_left_1.png"
-                );
-
-                animator.addClip(
-                        "attack_right",
-                        "/enemy/slime_attack_right_0.png",
-                        "/enemy/slime_attack_right_1.png"
-                );
+                addSlimeClips(animator);
 
             } else if (type.equals("goblin")) {
 
-                animator.addClip(
-                        "walk_left",
-                        "/enemy/goblin_walk_left_0.png",
-                        "/enemy/goblin_walk_left_1.png"
-                );
-
-                animator.addClip(
-                        "walk_right",
-                        "/enemy/goblin_walk_right_0.png",
-                        "/enemy/goblin_walk_right_1.png"
-                );
-
-                animator.addClip(
-                        "attack_left",
-                        "/enemy/goblin_attack_left_0.png",
-                        "/enemy/goblin_attack_left_1.png"
-                );
-
-                animator.addClip(
-                        "attack_right",
-                        "/enemy/goblin_attack_right_0.png",
-                        "/enemy/goblin_attack_right_1.png"
-                );
+                addGoblinClips(animator);
 
             } else if (type.equals("skeleton")) {
 
-                animator.addClip(
-                        "walk_down",
-                        "/enemy/skeleton_walk_down_0.png",
-                        "/enemy/skeleton_walk_down_1.png"
-                );
-
-                animator.addClip(
-                        "walk_up",
-                        "/enemy/skeleton_walk_up_0.png",
-                        "/enemy/skeleton_walk_up_1.png"
-                );
-
-                animator.addClip(
-                        "walk_left",
-                        "/enemy/skeleton_walk_left_0.png",
-                        "/enemy/skeleton_walk_left_1.png"
-                );
-
-                animator.addClip(
-                        "walk_right",
-                        "/enemy/skeleton_walk_right_0.png",
-                        "/enemy/skeleton_walk_right_1.png"
-                );
-
-                animator.addClip(
-                        "attack_down",
-                        "/enemy/skeleton_attack_down_0.png",
-                        "/enemy/skeleton_attack_down_1.png"
-                );
-
-                animator.addClip(
-                        "attack_up",
-                        "/enemy/skeleton_attack_up_0.png",
-                        "/enemy/skeleton_attack_up_1.png"
-                );
-
-                animator.addClip(
-                        "attack_left",
-                        "/enemy/skeleton_attack_left_0.png",
-                        "/enemy/skeleton_attack_left_1.png"
-                );
-
-                animator.addClip(
-                        "attack_right",
-                        "/enemy/skeleton_attack_right_0.png",
-                        "/enemy/skeleton_attack_right_1.png"
-                );
+                addSkeletonClips(animator);
             }
 
             animator.setFrameSpeed(8);
@@ -399,66 +356,107 @@ public class GamePanel extends Pane {
         }
     }
 
-    //------------------------
-    // 玩家出生
-    //------------------------
+    private void addSlimeClips(Animator animator) {
 
-    public void spawnPlayer() {
+        animator.addClip(
+                "idle",
+                "/enemy/slime_idle_0.png",
+                "/enemy/slime_idle_1.png",
+                "/enemy/slime_idle_2.png"
+        );
 
-        Player player = gameManager.getPlayer();
+        animator.addClip(
+                "attack_left",
+                "/enemy/slime_attack_left_0.png",
+                "/enemy/slime_attack_left_1.png"
+        );
 
-        if (player == null) {
-            return;
-        }
-
-        int[] spawn = mazeMap.getSpawnPoint();
-
-        int row = spawn[0];
-
-        int col = spawn[1];
-
-        player.setPosition(row, col);
+        animator.addClip(
+                "attack_right",
+                "/enemy/slime_attack_right_0.png",
+                "/enemy/slime_attack_right_1.png"
+        );
     }
 
-    //------------------------
-    // 游戏循环
-    //------------------------
+    private void addGoblinClips(Animator animator) {
 
-    private void setupGameLoop() {
+        animator.addClip(
+                "walk_left",
+                "/enemy/goblin_walk_left_0.png",
+                "/enemy/goblin_walk_left_1.png"
+        );
 
-        gameLoop = new AnimationTimer() {
+        animator.addClip(
+                "walk_right",
+                "/enemy/goblin_walk_right_0.png",
+                "/enemy/goblin_walk_right_1.png"
+        );
 
-            @Override
-            public void handle(long now) {
+        animator.addClip(
+                "attack_left",
+                "/enemy/goblin_attack_left_0.png",
+                "/enemy/goblin_attack_left_1.png"
+        );
 
-                update();
-
-                draw();
-            }
-        };
+        animator.addClip(
+                "attack_right",
+                "/enemy/goblin_attack_right_0.png",
+                "/enemy/goblin_attack_right_1.png"
+        );
     }
 
-    //------------------------
-    // 开始游戏
-    //------------------------
+    private void addSkeletonClips(Animator animator) {
 
-    public void startGameLoop() {
+        animator.addClip(
+                "walk_down",
+                "/enemy/skeleton_walk_down_0.png",
+                "/enemy/skeleton_walk_down_1.png"
+        );
 
-        gameLoop.start();
+        animator.addClip(
+                "walk_up",
+                "/enemy/skeleton_walk_up_0.png",
+                "/enemy/skeleton_walk_up_1.png"
+        );
+
+        animator.addClip(
+                "walk_left",
+                "/enemy/skeleton_walk_left_0.png",
+                "/enemy/skeleton_walk_left_1.png"
+        );
+
+        animator.addClip(
+                "walk_right",
+                "/enemy/skeleton_walk_right_0.png",
+                "/enemy/skeleton_walk_right_1.png"
+        );
+
+        animator.addClip(
+                "attack_down",
+                "/enemy/skeleton_attack_down_0.png",
+                "/enemy/skeleton_attack_down_1.png"
+        );
+
+        animator.addClip(
+                "attack_up",
+                "/enemy/skeleton_attack_up_0.png",
+                "/enemy/skeleton_attack_up_1.png"
+        );
+
+        animator.addClip(
+                "attack_left",
+                "/enemy/skeleton_attack_left_0.png",
+                "/enemy/skeleton_attack_left_1.png"
+        );
+
+        animator.addClip(
+                "attack_right",
+                "/enemy/skeleton_attack_right_0.png",
+                "/enemy/skeleton_attack_right_1.png"
+        );
     }
 
-    //------------------------
-    // 停止游戏
-    //------------------------
-
-    public void stopGameLoop() {
-
-        gameLoop.stop();
-    }
-
-    //------------------------
-    // 游戏更新
-    //------------------------
+    // ================= Update =================
 
     private void update() {
 
@@ -472,26 +470,9 @@ public class GamePanel extends Pane {
             player.setMoving(false);
         }
 
-        if (moveCooldown > 0) {
-            moveCooldown--;
-        }
+        updateCooldowns();
 
-        if (attackCooldown > 0) {
-            attackCooldown--;
-        }
-
-        if (playerDamageCooldown > 0) {
-            playerDamageCooldown--;
-        }
-
-        if (playerAttackTimer > 0) {
-
-            playerAttackTimer--;
-
-            if (playerAttackTimer == 0 && player != null) {
-                player.stopAttack();
-            }
-        }
+        updatePlayerAttackState(player);
 
         processInput();
 
@@ -513,7 +494,40 @@ public class GamePanel extends Pane {
 
         updateEnemyAnimations();
     }
-    
+
+    private void updateCooldowns() {
+
+        if (moveCooldown > 0) {
+            moveCooldown--;
+        }
+
+        if (attackCooldown > 0) {
+            attackCooldown--;
+        }
+
+        if (playerDamageCooldown > 0) {
+            playerDamageCooldown--;
+        }
+
+        if (playerHitFlashTimer > 0) {
+            playerHitFlashTimer--;
+        }
+    }
+
+    private void updatePlayerAttackState(Player player) {
+
+        if (playerAttackTimer > 0) {
+
+            playerAttackTimer--;
+
+            if (playerAttackTimer == 0 && player != null) {
+                player.stopAttack();
+            }
+        }
+    }
+
+    // ================= Player Animation Update =================
+
     private void updatePlayerAnimation() {
 
         Player player = gameManager.getPlayer();
@@ -522,24 +536,29 @@ public class GamePanel extends Pane {
             return;
         }
 
-        String dir = getDirectionKey(player.getDirection());
-        String weapon = getWeaponKey(player.getWeaponName());
+        String directionKey = getDirectionKey(player.getDirection());
+        String weaponKey = getWeaponKey(player.getWeaponName());
 
         if (player.isAttacking()) {
 
-            playerAnimator.play(weapon + "_attack_" + dir, false);
+            playerAnimator.play(
+                    weaponKey + "_attack_" + directionKey,
+                    false
+            );
 
             playerAnimator.update();
 
         } else {
 
             playerAnimator.setClipFrame(
-                    weapon + "_walk_" + dir,
+                    weaponKey + "_walk_" + directionKey,
                     player.getWalkFrameIndex()
             );
         }
     }
-    
+
+    // ================= Enemy Animation Update =================
+
     private void updateEnemyAnimations() {
 
         for (Enemy enemy : enemies) {
@@ -570,109 +589,76 @@ public class GamePanel extends Pane {
             }
         }
     }
-    
+
     private void updateSlimeAnimation(Enemy enemy, Animator animator) {
 
         if (enemy.isAttacking()) {
 
-            String dir = getHorizontalDirectionKey(enemy.getDirection());
+            String directionKey = getHorizontalDirectionKey(enemy.getDirection());
 
-            animator.play("attack_" + dir, false);
+            animator.play(
+                    "attack_" + directionKey,
+                    false
+            );
 
             animator.update();
 
         } else {
 
-            animator.play("idle", true);
+            animator.play(
+                    "idle",
+                    true
+            );
 
             animator.update();
         }
     }
-    
+
     private void updateGoblinAnimation(Enemy enemy, Animator animator) {
 
-        String dir = getHorizontalDirectionKey(enemy.getDirection());
+        String directionKey = getHorizontalDirectionKey(enemy.getDirection());
 
         if (enemy.isAttacking()) {
 
-            animator.play("attack_" + dir, false);
+            animator.play(
+                    "attack_" + directionKey,
+                    false
+            );
 
             animator.update();
 
         } else {
 
             animator.setClipFrame(
-                    "walk_" + dir,
+                    "walk_" + directionKey,
                     enemy.getWalkFrameIndex()
             );
         }
     }
-    
+
     private void updateSkeletonAnimation(Enemy enemy, Animator animator) {
 
-        String dir = getDirectionKey(enemy.getDirection());
+        String directionKey = getDirectionKey(enemy.getDirection());
 
         if (enemy.isAttacking()) {
 
-            animator.play("attack_" + dir, false);
+            animator.play(
+                    "attack_" + directionKey,
+                    false
+            );
 
             animator.update();
 
         } else {
 
             animator.setClipFrame(
-                    "walk_" + dir,
+                    "walk_" + directionKey,
                     enemy.getWalkFrameIndex()
             );
         }
     }
-    
-    private String getDirectionKey(Player.Direction direction) {
 
-        if (direction == Player.Direction.UP) {
-            return "up";
-        }
-
-        if (direction == Player.Direction.DOWN) {
-            return "down";
-        }
-
-        if (direction == Player.Direction.LEFT) {
-            return "left";
-        }
-
-        return "right";
-    }
-    
-    private String getHorizontalDirectionKey(Player.Direction direction) {
-
-        if (direction == Player.Direction.LEFT) {
-            return "left";
-        }
-
-        return "right";
-    }
-    
-    private String getWeaponKey(String weaponName) {
-
-        if (weaponName == null) {
-            return "wood";
-        }
-
-        if (weaponName.equalsIgnoreCase("Iron Sword")) {
-            return "iron";
-        }
-
-        if (weaponName.equalsIgnoreCase("Diamond Sword")) {
-            return "diamond";
-        }
-
-        return "wood";
-    }
-
-    //------------------------
-    // 玩家移动
-    //------------------------
+    // ================= Player Movement and Attack =================
 
     private void movePlayer(Player.Direction direction) {
 
@@ -685,16 +671,13 @@ public class GamePanel extends Pane {
         player.face(direction);
 
         int nextRow = player.getNextRow(direction);
-
         int nextCol = player.getNextCol(direction);
 
         if (mazeMap.isWalkable(nextRow, nextCol)) {
-
             player.move(direction);
         }
     }
-    
-    //攻击系统
+
     private void playerAttack() {
 
         Player player = gameManager.getPlayer();
@@ -707,7 +690,7 @@ public class GamePanel extends Pane {
             return;
         }
 
-        attackCooldown = 16;
+        attackCooldown = ATTACK_COOLDOWN_FRAMES;
 
         player.startAttack();
 
@@ -740,9 +723,21 @@ public class GamePanel extends Pane {
         }
     }
 
-    //------------------------
-    // 怪物
-    //------------------------
+    // ================= Enemy Logic =================
+
+    private void updateEnemies() {
+
+        enemyMoveCounter++;
+
+        if (enemyMoveCounter % ENEMY_MOVE_INTERVAL != 0) {
+            return;
+        }
+
+        for (Enemy enemy : enemies) {
+            enemy.move();
+        }
+    }
+
     private void checkEnemyContact() {
 
         Player player = gameManager.getPlayer();
@@ -766,13 +761,15 @@ public class GamePanel extends Pane {
 
                 player.takeDamage(enemy.getDamage());
 
-                playerDamageCooldown = 60;
+                playerDamageCooldown = PLAYER_DAMAGE_COOLDOWN_FRAMES;
+
+                playerHitFlashTimer = PLAYER_HIT_FLASH_DURATION;
 
                 return;
             }
         }
     }
-    
+
     private void faceEnemyToPlayer(Enemy enemy, Player player) {
 
         String type = enemy.getTypeName();
@@ -783,8 +780,11 @@ public class GamePanel extends Pane {
         if (type.equals("slime") || type.equals("goblin")) {
 
             if (colDiff < 0) {
+
                 enemy.setDirection(Player.Direction.LEFT);
+
             } else if (colDiff > 0) {
+
                 enemy.setDirection(Player.Direction.RIGHT);
             }
 
@@ -794,37 +794,28 @@ public class GamePanel extends Pane {
         if (Math.abs(rowDiff) > Math.abs(colDiff)) {
 
             if (rowDiff < 0) {
+
                 enemy.setDirection(Player.Direction.UP);
+
             } else if (rowDiff > 0) {
+
                 enemy.setDirection(Player.Direction.DOWN);
             }
 
         } else {
 
             if (colDiff < 0) {
+
                 enemy.setDirection(Player.Direction.LEFT);
+
             } else if (colDiff > 0) {
+
                 enemy.setDirection(Player.Direction.RIGHT);
             }
         }
     }
 
-    private void updateEnemies() {
-
-        enemyMoveCounter++;
-
-        if (enemyMoveCounter % 30 != 0) {
-            return;
-        }
-
-        for (Enemy enemy : enemies) {
-            enemy.move();
-        }
-    }
-
-    //------------------------
-    // 钥匙
-    //------------------------
+    // ================= Key and Level Checks =================
 
     private void checkKeyCollection() {
 
@@ -835,7 +826,6 @@ public class GamePanel extends Pane {
         }
 
         int row = player.getRow();
-
         int col = player.getCol();
 
         if (mazeMap.isKey(row, col)) {
@@ -853,10 +843,6 @@ public class GamePanel extends Pane {
         }
     }
 
-    //------------------------
-    // 通道检测
-    //------------------------
-
     private void checkPortal() {
 
         Player player = gameManager.getPlayer();
@@ -866,26 +852,12 @@ public class GamePanel extends Pane {
         }
 
         int row = player.getRow();
-
         int col = player.getCol();
 
-        if (mazeMap.isPortal(row, col)) {
-
-            if (player.hasEnoughKeys()) {
-
-                gameManager.nextMap();
-
-            } else {
-
-                // 不想刷屏的话，这里可以不写 println
-                // System.out.println("You need 3 keys to enter the next level.");
-            }
+        if (mazeMap.isPortal(row, col) && player.hasEnoughKeys()) {
+            gameManager.nextMap();
         }
     }
-
-    //------------------------
-    // 出口检测
-    //------------------------
 
     private void checkExit() {
 
@@ -896,18 +868,12 @@ public class GamePanel extends Pane {
         }
 
         int row = player.getRow();
-
         int col = player.getCol();
 
         if (mazeMap.isExit(row, col)) {
-
             gameManager.showVictory();
         }
     }
-
-    //------------------------
-    // 玩家死亡
-    //------------------------
 
     private void checkPlayerDeath() {
 
@@ -918,8 +884,8 @@ public class GamePanel extends Pane {
         }
 
         if (player.isDead()) {
-        	    
-        		gameEnded = true;
+
+            gameEnded = true;
 
             stopGameLoop();
 
@@ -927,21 +893,14 @@ public class GamePanel extends Pane {
         }
     }
 
-    //------------------------
-    // Boss死亡
-    //------------------------
-
     private void checkBossDefeated() {
 
         if (mazeMap.isFinalLevel() && enemies.isEmpty()) {
-
             gameManager.showVictory();
         }
     }
 
-    //------------------------
-    // 绘制
-    //------------------------
+    // ================= Rendering =================
 
     private void draw() {
 
@@ -961,10 +920,6 @@ public class GamePanel extends Pane {
         drawHUD();
     }
 
-    //------------------------
-    // 绘制玩家
-    //------------------------
-
     private void drawPlayer() {
 
         Player player = gameManager.getPlayer();
@@ -973,8 +928,8 @@ public class GamePanel extends Pane {
             return;
         }
 
-        int x = player.getCol() * TILE_SIZE - SPRITE_OFFSET;
-        int y = player.getRow() * TILE_SIZE - SPRITE_OFFSET;
+        int x = player.getCol() * TILE_SIZE - getSpriteOffset(SPRITE_SIZE);
+        int y = player.getRow() * TILE_SIZE - getSpriteOffset(SPRITE_SIZE);
 
         Image frame = null;
 
@@ -994,116 +949,131 @@ public class GamePanel extends Pane {
 
         } else {
 
-            gc.setFill(Color.DODGERBLUE);
+            drawPlayerFallback(player);
+        }
 
-            gc.fillOval(
-                    player.getCol() * TILE_SIZE + 8,
-                    player.getRow() * TILE_SIZE + 8,
-                    TILE_SIZE - 16,
-                    TILE_SIZE - 16
+        if (playerHitFlashTimer > 0) {
+            drawPlayerHitEffect(player);
+        }
+    }
+
+    private void drawPlayerFallback(Player player) {
+
+        gc.setFill(Color.DODGERBLUE);
+
+        gc.fillOval(
+                player.getCol() * TILE_SIZE + 8,
+                player.getRow() * TILE_SIZE + 8,
+                TILE_SIZE - 16,
+                TILE_SIZE - 16
+        );
+    }
+
+    private void drawPlayerHitEffect(Player player) {
+
+        int x = player.getCol() * TILE_SIZE;
+        int y = player.getRow() * TILE_SIZE;
+
+        if ((playerHitFlashTimer / 4) % 2 == 0) {
+
+            gc.setGlobalAlpha(0.35);
+            gc.setFill(Color.RED);
+
+            gc.fillRect(
+                    x,
+                    y,
+                    TILE_SIZE,
+                    TILE_SIZE
             );
+
+            gc.setGlobalAlpha(1.0);
         }
+
+        gc.setStroke(Color.RED);
+        gc.setLineWidth(3);
+
+        gc.strokeRect(
+                x + 2,
+                y + 2,
+                TILE_SIZE - 4,
+                TILE_SIZE - 4
+        );
+
+        gc.setFill(Color.RED);
+
+        gc.fillText(
+                "-HP",
+                x + 10,
+                y - 6
+        );
+
+        gc.setLineWidth(1);
     }
-
-    private Image getPlayerSprite(Player player) {
-
-        String path = player.getCurrentSpritePath();
-
-        if (path == null) {
-            return null;
-        }
-
-        if (!path.equals(currentPlayerSpritePath)) {
-
-            currentPlayerSpritePath = path;
-
-            playerSprite = loadImage(path);
-        }
-
-        return playerSprite;
-    }
-
-    private Image loadImage(String path) {
-
-        try {
-
-            var stream = getClass().getResourceAsStream(path);
-
-            if (stream == null) {
-                return null;
-            }
-
-            return new Image(stream);
-
-        } catch (Exception e) {
-
-            return null;
-        }
-    }
-
-    //------------------------
-    // 绘制怪物
-    //------------------------
 
     private void drawEnemies() {
 
-    for (Enemy enemy : enemies) {
+        for (Enemy enemy : enemies) {
 
-        int size = getEnemySpriteSize(enemy);
+            int size = getEnemySpriteSize(enemy);
+            int offset = getSpriteOffset(size);
 
-        int offset = (size - TILE_SIZE) / 2;
+            int x = enemy.getCol() * TILE_SIZE - offset;
+            int y = enemy.getRow() * TILE_SIZE - offset;
 
-        int x = enemy.getCol() * TILE_SIZE - offset;
-        int y = enemy.getRow() * TILE_SIZE - offset;
+            Animator animator = enemyAnimators.get(enemy);
 
-        Animator animator = enemyAnimators.get(enemy);
+            Image frame = null;
 
-        Image frame = null;
+            if (animator != null) {
+                frame = animator.getCurrentFrame();
+            }
 
-        if (animator != null) {
-            frame = animator.getCurrentFrame();
+            if (frame != null) {
+
+                gc.drawImage(
+                        frame,
+                        x,
+                        y,
+                        size,
+                        size
+                );
+
+            } else if (enemy.getSprite() != null
+                    && enemy.getSprite().getImage() != null) {
+
+                gc.drawImage(
+                        enemy.getSprite().getImage(),
+                        x,
+                        y,
+                        size,
+                        size
+                );
+
+            } else {
+
+                drawEnemyFallback(enemy);
+            }
+
+            drawEnemyHealthBar(
+                    enemy,
+                    enemy.getCol() * TILE_SIZE,
+                    enemy.getRow() * TILE_SIZE
+            );
         }
+    }
 
-        if (frame != null) {
+    private void drawEnemyFallback(Enemy enemy) {
 
-            gc.drawImage(
-                    frame,
-                    x,
-                    y,
-                    size,
-                    size
-            );
+        gc.setFill(Color.RED);
 
-        } else if (enemy.getSprite().getImage() != null) {
-
-            gc.drawImage(
-                    enemy.getSprite().getImage(),
-                    x,
-                    y,
-                    size,
-                    size
-            );
-
-        } else {
-
-            gc.setFill(Color.RED);
-
-            gc.fillOval(
-                    enemy.getCol() * TILE_SIZE + 8,
-                    enemy.getRow() * TILE_SIZE + 8,
-                    TILE_SIZE - 16,
-                    TILE_SIZE - 16
-            );
-        }
-
-        drawEnemyHealthBar(
-                enemy,
-                enemy.getCol() * TILE_SIZE,
-                enemy.getRow() * TILE_SIZE
+        gc.fillOval(
+                enemy.getCol() * TILE_SIZE + 8,
+                enemy.getRow() * TILE_SIZE + 8,
+                TILE_SIZE - 16,
+                TILE_SIZE - 16
         );
     }
-}
-    
+
     private void drawEnemyHealthBar(Enemy enemy, double x, double y) {
 
         double barWidth = TILE_SIZE - 8;
@@ -1112,6 +1082,7 @@ public class GamePanel extends Pane {
         double hpRatio = (double) enemy.getHp() / enemy.getMaxHp();
 
         gc.setFill(Color.BLACK);
+
         gc.fillRect(
                 x + 4,
                 y - 8,
@@ -1120,6 +1091,7 @@ public class GamePanel extends Pane {
         );
 
         gc.setFill(Color.RED);
+
         gc.fillRect(
                 x + 4,
                 y - 8,
@@ -1127,10 +1099,6 @@ public class GamePanel extends Pane {
                 barHeight
         );
     }
-
-    //------------------------
-    // HUD
-    //------------------------
 
     private void drawHUD() {
 
@@ -1141,11 +1109,28 @@ public class GamePanel extends Pane {
         }
 
         gc.setFill(Color.rgb(0, 0, 0, 0.65));
-        gc.fillRoundRect(10, 10, 430, 95, 15, 15);
+
+        gc.fillRoundRect(
+                HUD_X,
+                HUD_Y,
+                HUD_WIDTH,
+                HUD_HEIGHT,
+                15,
+                15
+        );
 
         gc.setStroke(Color.GOLD);
-        gc.strokeRoundRect(10, 10, 430, 95, 15, 15);
 
+        gc.strokeRoundRect(
+                HUD_X,
+                HUD_Y,
+                HUD_WIDTH,
+                HUD_HEIGHT,
+                15,
+                15
+        );
+
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
         gc.setFill(Color.WHITE);
 
         gc.fillText(
@@ -1181,36 +1166,43 @@ public class GamePanel extends Pane {
         );
     }
 
-    //------------------------
-    // 按键
-    //------------------------
+    // ================= Input Handling =================
 
     public void handleKeyPressed(KeyCode key) {
 
         pressedKeys.add(key);
 
         if (key == KeyCode.ESCAPE) {
+
             clearInputState();
+
             gameManager.pauseGame();
+
             return;
         }
 
         if (key == KeyCode.B) {
+
             clearInputState();
+
             gameManager.openShop();
+
+            return;
         }
     }
-    
+
     public void handleKeyReleased(KeyCode key) {
         pressedKeys.remove(key);
     }
-    
+
     public void clearInputState() {
+
         pressedKeys.clear();
+
         moveCooldown = 0;
         attackCooldown = 0;
     }
-    
+
     private void processInput() {
 
         if (pressedKeys.contains(KeyCode.SPACE)) {
@@ -1222,26 +1214,88 @@ public class GamePanel extends Pane {
         }
 
         if (pressedKeys.contains(KeyCode.W)) {
+
             movePlayer(Player.Direction.UP);
-            moveCooldown = 8;
+            moveCooldown = MOVE_COOLDOWN_FRAMES;
+
         } else if (pressedKeys.contains(KeyCode.A)) {
+
             movePlayer(Player.Direction.LEFT);
-            moveCooldown = 8;
+            moveCooldown = MOVE_COOLDOWN_FRAMES;
+
         } else if (pressedKeys.contains(KeyCode.S)) {
+
             movePlayer(Player.Direction.DOWN);
-            moveCooldown = 8;
+            moveCooldown = MOVE_COOLDOWN_FRAMES;
+
         } else if (pressedKeys.contains(KeyCode.D)) {
+
             movePlayer(Player.Direction.RIGHT);
-            moveCooldown = 8;
+            moveCooldown = MOVE_COOLDOWN_FRAMES;
         }
     }
 
-    //------------------------
-    // 提供地图访问
-    //------------------------
+    // ================= Helper Methods =================
+
+    private int getEnemySpriteSize(Enemy enemy) {
+
+        if (enemy.getTypeName().equals("skeleton")) {
+            return SKELETON_SPRITE_SIZE;
+        }
+
+        return SPRITE_SIZE;
+    }
+
+    private int getSpriteOffset(int spriteSize) {
+        return (spriteSize - TILE_SIZE) / 2;
+    }
+
+    private String getDirectionKey(Player.Direction direction) {
+
+        if (direction == Player.Direction.UP) {
+            return "up";
+        }
+
+        if (direction == Player.Direction.DOWN) {
+            return "down";
+        }
+
+        if (direction == Player.Direction.LEFT) {
+            return "left";
+        }
+
+        return "right";
+    }
+
+    private String getHorizontalDirectionKey(Player.Direction direction) {
+
+        if (direction == Player.Direction.LEFT) {
+            return "left";
+        }
+
+        return "right";
+    }
+
+    private String getWeaponKey(String weaponName) {
+
+        if (weaponName == null) {
+            return "wood";
+        }
+
+        if (weaponName.equalsIgnoreCase("Iron Sword")) {
+            return "iron";
+        }
+
+        if (weaponName.equalsIgnoreCase("Diamond Sword")) {
+            return "diamond";
+        }
+
+        return "wood";
+    }
+
+    // ================= Getters =================
 
     public MazeMap getMazeMap() {
-
         return mazeMap;
     }
 }

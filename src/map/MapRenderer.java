@@ -3,221 +3,168 @@ package map;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
-import javafx.scene.paint.Color;
 
 /**
- * MapRenderer — 负责用 JavaFX 把地图贴图到 Canvas 上
- * MapRenderer — Renders the maze map onto a JavaFX Canvas using tile sprites.
- *
- * 贴图资源路径（放在 resources/images/map/ 目录下）：
- * Sprite paths (place these in resources/images/map/):
- *   floor.png    — 普通地板       / generic floor tile
- *   wall.png     — 墙             / wall tile
- *   spawn.png    — 出生点         / spawn tile
- *   exit.png     — 出口           / exit tile
- *   portal.png   — 通道口         / portal tile (新增 / new)
- *   beginner.png — 初级怪物区地板 / beginner zone floor
- *   advanced.png — 高级怪物区地板 / advanced zone floor
- *   boss.png     — Boss 区地板    / boss zone floor
- *
- * 如果贴图缺失，会自动退回纯色填充（方便开发阶段测试）。
- * If a sprite is missing, falls back to solid colors (handy during development).
- *
- * 用法 / Usage:
- *   Canvas canvas = new Canvas(MazeMap.COLS * Tile.TILE_SIZE,
- *                              MazeMap.ROWS * Tile.TILE_SIZE);
- *   MapRenderer renderer = new MapRenderer(mazeMap, canvas);
- *   renderer.render();   // 每帧调用 / call every frame
+ * Renders the current maze map onto a JavaFX Canvas.
  */
 public class MapRenderer {
-	public static final int TILE_SIZE = 48;
 
-    // ── 依赖 / Dependencies ────────────────────────────────────────────────
-    private final MazeMap         mazeMap;
-    private final Canvas          canvas;
+    // ================= Constants =================
+
+    public static final int TILE_SIZE = Tile.TILE_SIZE;
+
+    // ================= Fields =================
+
+    private final MazeMap mazeMap;
     private final GraphicsContext gc;
 
-    // ── 贴图 / Sprites ────────────────────────────────────────────────────
+    // ================= Sprites =================
+
     private Image floorSprite;
     private Image wallSprite;
     private Image spawnSprite;
     private Image exitSprite;
-    private Image portalSprite;    // 通道口 / portal to next level
-    private Image beginnerSprite;  // 初级怪物区 / beginner zone
-    private Image advancedSprite;  // 高级怪物区 / advanced zone
-    private Image bossSprite;      // Boss 区 / boss zone
-    private Image keySprite ;
+    private Image portalSprite;
+    private Image beginnerSprite;
+    private Image advancedSprite;
+    private Image bossSprite;
+    private Image keySprite;
 
-    // ── 备用颜色（贴图缺失时）/ Fallback colors (when sprites are missing) ──
-    private static final Color COLOR_FLOOR    = Color.web("#8B7355"); // 棕色地板     / brown floor
-    private static final Color COLOR_WALL     = Color.web("#3A3A4A"); // 深灰墙       / dark wall
-    private static final Color COLOR_SPAWN    = Color.web("#4CAF50"); // 绿色出生点   / green spawn
-    private static final Color COLOR_EXIT     = Color.web("#FFC107"); // 黄色出口     / yellow exit
-    private static final Color COLOR_PORTAL   = Color.web("#9B59B6"); // 紫色通道口   / purple portal
-    private static final Color COLOR_BEGINNER = Color.web("#5A7A40"); // 橄榄绿初级区 / olive beginner
-    private static final Color COLOR_ADVANCED = Color.web("#7A3A2A"); // 深红高级区   / dark-red advanced
-    private static final Color COLOR_BOSS     = Color.web("#8A1A1A"); // 暗红Boss区   / crimson boss
-    private static final Color COLOR_KEY     = Color.web("#9B59B6"); // 紫色钥匙区
+    // ================= Constructor =================
 
-    /**
-     * 构造方法 / Constructor
-     *
-     * @param mazeMap 已加载的地图数据 / Loaded map data
-     * @param canvas  JavaFX Canvas，尺寸应为 COLS*32 × ROWS*32
-     *                JavaFX Canvas sized COLS*32 × ROWS*32
-     */
     public MapRenderer(MazeMap mazeMap, Canvas canvas) {
+
         this.mazeMap = mazeMap;
-        this.canvas  = canvas;
-        this.gc      = canvas.getGraphicsContext2D();
+        this.gc = canvas.getGraphicsContext2D();
+
         loadSprites();
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // loadSprites() — 加载所有贴图，失败时静默跳过（使用备用颜色）
-    //               — Load all sprites; silently skip on failure (fallback colors)
-    // ─────────────────────────────────────────────────────────────────────
+    // ================= Sprite Loading =================
 
+    /**
+     * Loads all map sprites from the resources folder.
+     */
     private void loadSprites() {
-        floorSprite    = loadImage("/map/floor.png");
-        wallSprite     = loadImage("/map/wall.png");
-        spawnSprite    = loadImage("/map/door.png");
-        exitSprite     = loadImage("/map/door.png");
-        portalSprite   = loadImage("/map/door.png");   //通道
+
+        floorSprite = loadImage("/map/floor.png");
+        wallSprite = loadImage("/map/wall.png");
+
+        spawnSprite = loadImage("/map/door.png");
+        exitSprite = loadImage("/map/door.png");
+        portalSprite = loadImage("/map/door.png");
+
         beginnerSprite = loadImage("/map/floor.png");
         advancedSprite = loadImage("/map/floor.png");
-        bossSprite     = loadImage("/map/floor.png");
+        bossSprite = loadImage("/map/floor.png");
+
         keySprite = loadImage("/map/key.png");
-        
     }
 
     /**
-     * 安全加载单张图片，失败返回 null。
-     * Safely load one image; returns null if the resource is not found.
+     * Loads an image from the resources folder.
      */
     private Image loadImage(String path) {
-        try {
-            var stream = getClass().getResourceAsStream(path);
-            if (stream == null) return null;
-            return new Image(stream);
-        } catch (Exception e) {
-            System.err.println("[MapRenderer] 无法加载贴图 / Failed to load sprite: " + path);
+
+        var stream = getClass().getResourceAsStream(path);
+
+        if (stream == null) {
+            System.err.println("[MapRenderer] Missing sprite: " + path);
             return null;
         }
+
+        return new Image(stream);
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // render() — 主渲染方法，逐格绘制当前层地图
-    //          — Main render method; draws the current level map cell by cell
-    // ─────────────────────────────────────────────────────────────────────
+    // ================= Rendering =================
 
     /**
-     * 把当前层地图绘制到 Canvas 上。
-     * Draw the current level map onto the Canvas.
-     * 切换层后直接再调用一次即可刷新画面。
-     * After switching levels, just call this again to refresh the canvas.
+     * Draws the whole current map onto the canvas.
      */
     public void render() {
-        int ts = Tile.TILE_SIZE; // 32px
 
-        for (int r = 0; r < MazeMap.ROWS; r++) {
-            for (int c = 0; c < MazeMap.COLS; c++) {
+        for (int row = 0; row < MazeMap.ROWS; row++) {
+            for (int col = 0; col < MazeMap.COLS; col++) {
 
-                double px = c * ts; // 像素 X / Pixel X
-                double py = r * ts; // 像素 Y / Pixel Y
+                double x = col * TILE_SIZE;
+                double y = row * TILE_SIZE;
 
-                char cell = mazeMap.getChar(r, c);
-
-                switch (cell) {
-
-                    case MazeMap.WALL:
-                        // 墙 / Wall
-                        drawTile(wallSprite, COLOR_WALL, px, py, ts);
-                        break;
-
-                    case MazeMap.SPAWN:
-                        // 出生点 / Spawn point
-                        drawTile(spawnSprite, COLOR_SPAWN, px, py, ts);
-                        break;
-
-                    case MazeMap.EXIT:
-                        // 出口（第三层）/ Exit (level 3 only)
-                        drawTile(floorSprite, COLOR_FLOOR, px, py, ts);
-                        drawTile(exitSprite,  COLOR_EXIT,  px, py, ts);
-                        break;
-
-                    case MazeMap.PORTAL:
-                        // 通道口：先画地板再叠通道贴图
-                        // Portal: floor first, then portal overlay
-                        drawTile(floorSprite,  COLOR_FLOOR,  px, py, ts);
-                        drawTile(portalSprite, COLOR_PORTAL, px, py, ts);
-                        break;
-
-                    case MazeMap.BEGINNER:
-                        // 初级怪物区 / Beginner zone
-                        drawTile(beginnerSprite, COLOR_BEGINNER, px, py, ts);
-                        break;
-
-                    case MazeMap.ADVANCED:
-                        // 高级怪物区 / Advanced zone
-                        drawTile(advancedSprite, COLOR_ADVANCED, px, py, ts);
-                        break;
-
-                    case MazeMap.BOSS:
-                        // Boss 区 / Boss zone
-                        drawTile(bossSprite, COLOR_BOSS, px, py, ts);
-                        break;
-                        
-                    case MazeMap.KEY:
-                        // 1. 先绘制地砖背景图片（铺满整个 TILE_SIZE）
-                        // 假设你的地砖图片变量名叫 floorSprite，直接调用 gc.drawImage 绘制背景
-                        gc.drawImage(
-                            floorSprite, 
-                            px, 
-                            py, 
-                            TILE_SIZE, 
-                            TILE_SIZE
-                        );
-                        
-                        // 2. 再绘制钥匙图片，同样铺满整个 TILE_SIZE
-                        gc.drawImage(
-                            keySprite,
-                            px,
-                            py,
-                            TILE_SIZE,
-                            TILE_SIZE
-                        );
-                        break;  
-
-                    default: // '.' 普通地板 / generic floor
-                        drawTile(floorSprite, COLOR_FLOOR, px, py, ts);
-                        break;
-                }
+                drawCell(mazeMap.getChar(row, col), x, y);
             }
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // drawTile() — 绘制单格：有贴图用贴图，否则用纯色
-    //            — Draw one cell: use sprite if available, else solid color
-    // ─────────────────────────────────────────────────────────────────────
+    /**
+     * Draws one map cell according to its map symbol.
+     */
+    private void drawCell(char cell, double x, double y) {
+
+        switch (cell) {
+
+            case MazeMap.WALL:
+                drawTile(wallSprite, x, y);
+                break;
+
+            case MazeMap.SPAWN:
+                drawTile(spawnSprite, x, y);
+                break;
+
+            case MazeMap.EXIT:
+                drawTile(floorSprite, x, y);
+                drawTile(exitSprite, x, y);
+                break;
+
+            case MazeMap.PORTAL:
+                drawTile(floorSprite, x, y);
+                drawTile(portalSprite, x, y);
+                break;
+
+            case MazeMap.BEGINNER:
+                drawTile(beginnerSprite, x, y);
+                break;
+
+            case MazeMap.ADVANCED:
+                drawTile(advancedSprite, x, y);
+                break;
+
+            case MazeMap.BOSS:
+                drawTile(bossSprite, x, y);
+                break;
+
+            case MazeMap.KEY:
+                drawKeyTile(x, y);
+                break;
+
+            default:
+                drawTile(floorSprite, x, y);
+                break;
+        }
+    }
 
     /**
-     * 绘制单个格子到 Canvas。
-     * Draw a single tile onto the Canvas.
-     *
-     * @param sprite   贴图（可为 null）/ Sprite image (may be null)
-     * @param fallback 备用颜色        / Fallback color if sprite is null
-     * @param px       像素 X          / Pixel X
-     * @param py       像素 Y          / Pixel Y
-     * @param size     格子边长（像素）/ Cell side length in pixels
+     * Draws a floor tile with a key image on top.
      */
-    private void drawTile(Image sprite, Color fallback, double px, double py, int size) {
-        if (sprite != null) {
-            gc.drawImage(sprite, px, py, size, size);
-        } else {
-            gc.setFill(fallback);
-            gc.fillRect(px, py, size, size);
+    private void drawKeyTile(double x, double y) {
+
+        drawTile(floorSprite, x, y);
+        drawTile(keySprite, x, y);
+    }
+
+    /**
+     * Draws one tile image.
+     */
+    private void drawTile(Image sprite, double x, double y) {
+
+        if (sprite == null) {
+            return;
         }
+
+        gc.drawImage(
+                sprite,
+                x,
+                y,
+                TILE_SIZE,
+                TILE_SIZE
+        );
     }
 }

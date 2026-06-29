@@ -1,20 +1,28 @@
 package weapon;
 
+/**
+ * Represents a weapon that the player can use.
+ * Each weapon has a name, damage value and price.
+ */
 public class Weapon {
 
-    private String name;
-    private int damage;
-    private int price;
+    // ================= Fields =================
+
+    private final String name;
+    private final int damage;
+    private final int price;
+
+    // ================= Constructor =================
 
     public Weapon(String name, int damage, int price) {
+
         this.name = name;
         this.damage = damage;
         this.price = price;
     }
 
-    public int attack() {
-        return damage;
-    }
+
+    // ================= Getters =================
 
     public String getName() {
         return name;
@@ -27,6 +35,8 @@ public class Weapon {
     public int getPrice() {
         return price;
     }
+
+    // ================= Factory Methods =================
 
     public static Weapon woodenSword() {
         return new Weapon("Wooden Sword", 10, 0);
